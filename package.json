@@ -1,0 +1,29 @@
+{
+  "name": "@ponado/packages",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter './apps/*' dev",
+    "build": "pnpm --filter './packages/*' build",
+    "build:all": "pnpm build && pnpm --filter './apps/*' build",
+    "package": "pnpm --filter './packages/*' package",
+    "publish:all": "pnpm build && pnpm --filter './packages/*' publish",
+    "lint": "pnpm --filter './packages/*' --filter './apps/*' lint",
+    "format": "prettier --write .",
+    "check": "pnpm --filter './packages/*' --filter './apps/*' check",
+    "test": "pnpm --filter './packages/*' --filter './apps/*' test"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "prettier": "^3.2.5",
+    "prettier-plugin-svelte": "^3.2.2",
+    "rolldown": "1.0.0-beta.45",
+    "tsdown": "^0.15.12",
+    "typescript": "^5.4.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

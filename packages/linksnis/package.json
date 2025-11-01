@@ -1,0 +1,24 @@
+{
+  "name": "@ponado/linksnis",
+  "version": "1.0.2",
+  "description": "simple util for lithuanina names generation",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc",
+    "release": "npm version patch && npm run build && npm publish",
+    "dev": "tsdown --watch"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3"
+  }
+}
