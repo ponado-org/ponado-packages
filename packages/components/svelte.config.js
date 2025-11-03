@@ -6,10 +6,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		alias: {
-			//shadcn components
-			"$scn/*": "./src/lib/components/ui/*",
-			//ponado util components
-			"$ponado-ui/*": "./src/lib/components/ponado/*"
+			'$scn/*': './src/lib/components/ui/*',
+			'$scn-extras/*': './src/lib/components/scn-extras/*',
+			'$ponado-ui/*': './src/lib/components/ponado-ui/*'
 		},
 		adapter: adapter()
 	}

@@ -17,4 +17,4 @@ declare module '@tanstack/table-core' {
 	}
 }
 
-export { };
+export {};
