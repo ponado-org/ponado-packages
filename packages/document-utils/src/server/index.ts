@@ -258,35 +258,33 @@ export async function typToPdf(template: string): Promise<Buffer> {
 }
 
 
-function escapeString(str: string): string {
+export function escapeTypstString(str: string): string {
 	if (!str) return '';
 	return str
-		.replace(/\\/g, '\\\\') // Escape backslashes first
-		.replace(/\r/g, '') // remove carriage returns
-		.replace(/"/g, '\\"') // Escape double quotes
-		.replace(/\n/g, '\\n') // escape newlines
-		.replace(/#/g, '\\#') // Escape hash symbols
-		.replace(/\$/g, '\\$'); // Escape dollar signs
+		.replace(/\\/g, '\\\\')
+		.replace(/"/g, '\\"')
+		.replace(/\r/g, '')
+		.replace(/\n/g, ' ');
 }
 
 /**
- * Typst template string util that escapes strings
-*/
-export function typ(str: TemplateStringsArray | string, ...values: any[]): string {
-	// If called as a regular function with a string
-	if (typeof str === 'string') {
-		return escapeString(str);
-	}
-
-	// If called as a template literal
-	let result = '';
-	for (let i = 0; i < str.length; i++) {
-		result += str[i];
-		if (i < values.length) {
-			result += escapeString(String(values[i]));
-		}
-	}
-	return result;
-}
-
+ * Generic wrapper for template strings to enable syntax highlighting in editors like Neovim.
+ * 
+ * Usage:
+ *   const html = tag('html');
+ *   const typ = tag('typst');
+ *   const sql = tag('sql');
+ *   const md = tag('markdown');
+ */
+export const tag =
+	(_name: string) =>
+		(s: TemplateStringsArray | string, ...values: any[]): string => {
+			if (typeof s === 'string') return s;
+			let result = '';
+			for (let i = 0; i < s.length; i++) {
+				result += s[i];
+				if (i < values.length) result += String(values[i]);
+			}
+			return result;
+		};
 

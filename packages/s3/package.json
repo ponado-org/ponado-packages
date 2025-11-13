@@ -1,6 +1,6 @@
 {
   "name": "@ponado/s3",
-  "version": "1.0.19",
+  "version": "1.0.30",
   "author": "Adomas Poniškaitis",
   "email": "adomas.poniskaitis@gmail.com",
   "description": "A starter for creating a TypeScript package.",
@@ -26,22 +26,25 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "vitest",
     "release": "npm version patch && npm run build && npm publish",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^24.9.2",
+    "@types/node": "^24.10.0",
     "bumpp": "^10.3.1",
     "file-type": "^21.0.0",
     "p-limit": "^7.2.0",
     "pdf-lib": "^1.17.1",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.8",
     "xlsx-write-stream": "^1.0.3"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.922.0",
-    "@aws-sdk/s3-request-presigner": "^3.922.0",
+    "@aws-sdk/client-s3": "^3.925.0",
+    "@aws-sdk/s3-request-presigner": "^3.925.0",
     "@paralleldrive/cuid2": "^3.0.4"
   }
 }

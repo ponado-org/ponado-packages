@@ -15,7 +15,7 @@ type HistoryMetadata = {
 
 interface DialogState {
 	title: string | null;
-	historyMetadata: HistoryMetadata | null;
+	historyMetadata: HistoryMetadata | null | undefined;
 }
 
 const defaultState: DialogState = {

@@ -25,24 +25,90 @@ async function streamToBuffer(stream: Readable): Promise<Buffer> {
 
 
 export async function detectFileType(buffer: Buffer) {
-
+	// FIRST: Check for binary file types using file signature
 	const fileType = await fileTypeFromBuffer(buffer);
 
-	if (!fileType) {
-		// Additional fallback checks for other text-based formats if needed
-		const text = buffer.toString('utf8', 0, Math.min(500, buffer.length));
-
-		if (text.includes('<?xml')) {
-			return {
-				ext: 'xml',
-				mime: 'application/xml'
-			};
+	// If file-type detects XML, check if it's actually SVG
+	if (fileType && fileType.ext === 'xml') {
+		const text = buffer.toString('utf8', 0, Math.min(4096, buffer.length)).trim();
+		if (text.includes('<svg') || text.match(/^<svg[\s>]/i)) {
+			return { ext: 'svg', mime: 'image/svg+xml' };
 		}
-
-		return null; // Unknown format
+		return fileType; // It's XML but not SVG
 	}
 
-	return fileType;
+	// Return other binary file types immediately
+	if (fileType) return fileType;
+
+	// THEN: Check if it's likely binary (high ratio of non-printable chars)
+	const sample = buffer.slice(0, Math.min(8192, buffer.length));
+	const nonPrintable = sample.filter(byte => byte < 32 && ![9, 10, 13].includes(byte)).length;
+	if (nonPrintable / sample.length > 0.3) {
+		return null; // Likely binary but unrecognized
+	}
+
+	// FINALLY: Check text-based formats
+	const text = buffer.toString('utf8', 0, Math.min(4096, buffer.length)).trim();
+
+	// XML/SVG (check SVG more strictly)
+	if (text.startsWith('<?xml')) {
+		return text.includes('<svg')
+			? { ext: 'svg', mime: 'image/svg+xml' }
+			: { ext: 'xml', mime: 'application/xml' };
+	}
+	if (text.match(/^<svg[\s>]/i)) {
+		return { ext: 'svg', mime: 'image/svg+xml' };
+	}
+
+	// HTML
+	if (text.match(/^<!DOCTYPE html/i) || text.match(/^<html[\s>]/i)) {
+		return { ext: 'html', mime: 'text/html' };
+	}
+
+	// JSON (be more careful)
+	if ((text.startsWith('{') && text.includes('}')) ||
+		(text.startsWith('[') && text.includes(']'))) {
+		try {
+			JSON.parse(text);
+			return { ext: 'json', mime: 'application/json' };
+		} catch {
+			// Not valid JSON, continue
+		}
+	}
+
+	// YAML
+	if (text.match(/^---\n/) || text.match(/^\w+:\s*[\w\[\{]/m)) {
+		return { ext: 'yaml', mime: 'text/yaml' };
+	}
+
+	// CSV (improved heuristic)
+	const lines = text.split('\n').filter(l => l.trim());
+	if (lines.length > 2) {
+		const colCounts = lines.slice(0, 10).map(l => l.split(',').length);
+		const consistent = colCounts.every(c => c === colCounts[0] && c > 1);
+		if (consistent) {
+			return { ext: 'csv', mime: 'text/csv' };
+		}
+	}
+
+	// Code files
+	if (text.includes('function ') || text.includes('const ') || text.includes('=>')) {
+		if (text.includes('import ') || text.includes('export ')) {
+			return { ext: 'js', mime: 'application/javascript' };
+		}
+	}
+
+	// Markdown (broader check)
+	if (text.match(/^#{1,6}\s+\w/) || text.includes('```') || text.match(/\[.+\]\(.+\)/)) {
+		return { ext: 'md', mime: 'text/markdown' };
+	}
+
+	// Plain text fallback (less restrictive)
+	if (text.length > 0) {
+		return { ext: 'txt', mime: 'text/plain' };
+	}
+
+	return null;
 }
 
 export type FetchObjectResult = {
@@ -83,9 +149,76 @@ type ClientProps = {
 
 }
 
+import {
+	ListObjectsV2Command,
+	CopyObjectCommand,
+} from "@aws-sdk/client-s3";
+
 export const createS3Client = (config: ClientProps) => {
 
 	const s3 = new S3Client(config);
+	async function cloneBucket({
+		sourceBucket,
+		targetBucket,
+		fromPrefix,
+		toPrefix,
+		keepStructure = true,
+	}: {
+		sourceBucket: string;
+		targetBucket: string;
+		fromPrefix?: string;
+		toPrefix?: string;
+		keepStructure?: boolean;
+		region?: string;
+	}) {
+
+		let continuationToken: string | undefined;
+
+		do {
+			const listResponse = await s3.send(
+				new ListObjectsV2Command({
+					Bucket: sourceBucket,
+					Prefix: fromPrefix,
+					ContinuationToken: continuationToken,
+				})
+			);
+
+			const contents = listResponse.Contents ?? [];
+
+			for (const obj of contents) {
+				if (!obj.Key) continue;
+
+				let newKey = keepStructure ? obj.Key : obj.Key.split("/").pop()!;
+				if (toPrefix) newKey = `${toPrefix.replace(/\/$/, "")}/${newKey}`;
+
+				console.log(`Copying ${obj.Key} → ${newKey}`);
+
+				await s3.send(
+					new CopyObjectCommand({
+						Bucket: targetBucket,
+						CopySource: `${sourceBucket}/${obj.Key}`,
+						Key: newKey,
+					})
+				);
+			}
+
+			continuationToken = listResponse.NextContinuationToken;
+		} while (continuationToken);
+
+		console.log("✅ Clone completed");
+	}
+
+
+	/** Allow sending any AWS command directly */
+	async function send<T>(command: T): Promise<any> {
+		// this keeps full typing if you pass a proper Command
+		// e.g. s3Client.send(new ListBucketsCommand())
+		// or s3Client.send(new GetObjectCommand({ Bucket, Key }))
+		// It’s effectively a type-safe passthrough.
+		// @ts-ignore: allow generic commands
+		return s3.send(command);
+	}
+
 
 	async function deleteObject(key: string): Promise<string | null> {
 		try {
@@ -95,6 +228,43 @@ export const createS3Client = (config: ClientProps) => {
 			return error instanceof Error ? error.message : String(error);
 		}
 	}
+
+	async function deleteObjectByPrefix(
+		keyOrPrefix: string
+	): Promise<{ deleted: string[]; error?: string }> {
+		try {
+			// List all objects matching the prefix
+			const listResult = await s3.send(
+				new ListObjectsV2Command({
+					Bucket: config.defaultBucket,
+					Prefix: keyOrPrefix
+				})
+			);
+
+			const objectsToDelete = listResult.Contents?.map(obj => ({ Key: obj.Key! })) || [];
+
+			if (objectsToDelete.length === 0) {
+				return { deleted: [] }; // nothing to delete
+			}
+
+			const deleteResult = await s3.send(
+				new DeleteObjectsCommand({
+					Bucket: config.defaultBucket,
+					Delete: { Objects: objectsToDelete }
+				})
+			);
+
+			const deletedKeys = deleteResult.Deleted?.map(d => d.Key!) || [];
+			return { deleted: deletedKeys };
+
+		} catch (error) {
+			return {
+				deleted: [],
+				error: error instanceof Error ? error.message : String(error)
+			};
+		}
+	}
+
 
 	async function deleteObjects(...keys: string[]): Promise<string | null> {
 		try {
@@ -145,11 +315,10 @@ export const createS3Client = (config: ClientProps) => {
 		}
 	}
 
-	type SaveProps = { file: Buffer | ArrayBuffer | File };
 
+	type SaveProps = { file: Buffer | ArrayBuffer | File, fileId?: string };
 
-
-	async function uploadObject({ file }: SaveProps) {
+	async function uploadObject({ file, fileId }: SaveProps) {
 		try {
 			let fileBuffer: Buffer;
 
@@ -170,7 +339,9 @@ export const createS3Client = (config: ClientProps) => {
 				throw new Error("Could not determine file type from buffer.")
 			}
 
-			let fileId = createId()
+			if (!fileId) {
+				fileId = createId()
+			}
 			let key = `${fileId}.${fileType.ext}`
 
 			await s3.send(
@@ -215,14 +386,16 @@ export const createS3Client = (config: ClientProps) => {
 		return fileResult;
 	}
 
-
 	return {
+		send,
+		cloneBucket,
 		uploadObject,
 		deleteObject,
 		deleteObjects,
 		getSignedUrl,
 		saveOrReplaceObject,
 		getObject,
+		deleteObjectByPrefix,
 	};
 
 };
