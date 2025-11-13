@@ -1,0 +1,6 @@
+packages:
+    - 'packages/*'
+    - 'apps/*'
+
+registries:
+    '@ponado': https://git.ponado.lt/api/packages/ponado/npm/

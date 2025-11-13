@@ -1,29 +1,31 @@
 {
-  "name": "@ponado/packages",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "pnpm --filter './apps/*' dev",
-    "build": "pnpm --filter './packages/*' build",
-    "build:all": "pnpm build && pnpm --filter './apps/*' build",
-    "package": "pnpm --filter './packages/*' package",
-    "publish:all": "pnpm build && pnpm --filter './packages/*' publish",
-    "lint": "pnpm --filter './packages/*' --filter './apps/*' lint",
-    "format": "prettier --write .",
-    "check": "pnpm --filter './packages/*' --filter './apps/*' check",
-    "test": "pnpm --filter './packages/*' --filter './apps/*' test"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "prettier": "^3.2.5",
-    "prettier-plugin-svelte": "^3.2.2",
-    "rolldown": "1.0.0-beta.45",
-    "tsdown": "^0.15.12",
-    "typescript": "^5.4.3"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  }
+	"name": "@ponado/utils-monorepo",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "pnpm --filter './packages/*' build",
+		"build:all": "pnpm build",
+		"dev": "pnpm --filter './packages/*' dev",
+		"test": "pnpm --filter './packages/*' test",
+		"typecheck": "pnpm --filter './packages/*' typecheck",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --write .",
+		"clean": "pnpm --filter './packages/*' clean && rm -rf node_modules",
+		"release:patch": "pnpm build && pnpm --filter './packages/*' --sequential release:patch"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"eslint": "^10.3.0",
+		"prettier": "^3.8.3",
+		"tsdown": "^0.21.10",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.59.2"
+	},
+	"engines": {
+		"node": ">=18.0.0",
+		"pnpm": ">=8.0.0"
+	},
+	"packageManager": "pnpm@9.0.0"
 }
