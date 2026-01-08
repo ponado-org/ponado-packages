@@ -37,4 +37,15 @@ export function capitalizeName(name: string): string {
 		.join('');
 }
 
+
+export function debounce<T extends (...args: any[]) => void>(fn: T, delay: number = 500) {
+	let timeout: ReturnType<typeof setTimeout>;
+
+	return function(...args: Parameters<T>) {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => fn(...args), delay);
+	};
+}
+
+
 export const getDirectionFn = (dir: 'asc' | 'desc') => (dir === 'asc' ? asc : desc);

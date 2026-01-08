@@ -35,3 +35,26 @@ export const zNumberArrayFromString = () =>
 			return val;
 		})
 		.default([]);
+
+
+export const UTCDateField = z.union([
+	z
+		.string()
+		.refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
+			message: "Date must be in YYYY-MM-DD format",
+		})
+		.transform((val) => {
+			const [year, month, day] = val.split("-").map(Number);
+			if (year && month && day) {
+				return new Date(Date.UTC(year, month - 1, day));
+			} else {
+				return new Date()
+			}
+		}),
+	z.date(),
+]);
+
+export const booleanField = z
+	.enum(['true', 'false'])
+	.transform((val) => val === 'true');
+

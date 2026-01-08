@@ -1,6 +1,6 @@
 {
   "name": "@ponado/date-utils",
-  "version": "1.0.6",
+  "version": "1.0.11",
   "description": "Common utils related to representing and transforming dates",
   "type": "module",
   "files": [
@@ -15,14 +15,17 @@
   },
   "scripts": {
     "build": "tsc",
-    "release": "npm version patch && npm run build && npm publish",
-    "dev": "tsdown --watch"
+    "test": "vitest",
+    "release": "npm version patch && npm run build && npm publish"
   },
   "peerDependencies": {
     "@internationalized/date": "^3.10.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "@internationalized/date": "^3.10.0"
+    "@internationalized/date": "^3.10.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "vitest": "^4.0.15"
   }
 }

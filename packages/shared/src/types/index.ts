@@ -1,6 +1,8 @@
 import type { Component, Snippet } from 'svelte';
 import { BadgeVariant } from '../badges';
 export type SelectType = 'multiple' | 'single';
+import { type Linksnis } from "@ponado/lt-utils";
+import { FileRejectedReason } from '../enums';
 
 export type SelectOptionType = number;
 
@@ -21,10 +23,11 @@ export type SwitchProps = {
 	id?: string | undefined;                     // optional id
 	checked?: boolean | undefined;
 	class?: string;
+	disabled?: boolean;
 	name?: string;
 	onCheckedChange?: (v: boolean) => void;
 	label?: string;
-	icon?: any;
+	icon?: Component | undefined | null;
 	description?: string;
 }
 
@@ -62,13 +65,15 @@ export type SelectPropsBase<T extends SelectOptionType, Multiple extends boolean
 
 export type UserInfo = {
 	email: string;
-	firstName: string;
-	lastName: string;
-	roleMask: number;
+	firstName?: string;
+	lastName?: string;
+	imageUrl?: string | undefined | null;
+	rolesMask: number;
 	personGroups: number[];
 };
 
 export interface NavbarItem<T extends UserInfo> {
+	id?: any;
 	href: string;
 	label: string;
 	children?: NavbarItem<T>[];
@@ -80,6 +85,7 @@ export interface NavbarItem<T extends UserInfo> {
 }
 
 type NavbarMenuBase<T extends UserInfo> = {
+	id?: any;
 	triggerText: string;
 	allowMask?: number;
 	denyMask?: number;
@@ -105,4 +111,69 @@ export interface FileInfo {
 	size: number;
 }
 
+export type FileUploadResult =
+	| {
+		success: true;
+		fileInfo: FileInfo;
+	}
+	| {
+		success: false;
+		error: string; // Required, not optional
+		code?: 'FILE_TOO_LARGE' | 'INVALID_TYPE' | 'UPLOAD_FAILED' | 'VALIDATION_ERROR';
+	};
 
+export const CaseStyles = ['lower', 'upper', 'camel'] as const;
+export type CaseStyle = (typeof CaseStyles)[number];
+
+export const TemplateFileTypes = ['docx', 'svg', 'typ'] as const;
+export type TemplateFileType = (typeof TemplateFileTypes)[number];
+
+//============ NOTE: Template field
+
+export type TemplateFieldBase = {
+	variable: string;
+	caseStyle: CaseStyle | null;
+	rawValue: string;
+	isFirstName: boolean
+	isLastName: boolean
+	isOptional: boolean;
+	linksnis: Linksnis | undefined | null
+};
+
+// final union
+export type TemplateField = TemplateFieldBase
+
+export type TemplateFieldDTO = TemplateField & { id: number };
+
+type TemplateFieldValidation = { error?: string; badge?: BadgeProps | null; isValid: boolean; }
+// // Final union
+// //
+export type TemplateFieldValidationDTO = TemplateField & TemplateFieldValidation;
+
+
+//============ NOTE: Field validation
+
+type FileValidationFnProps = {
+	file: File;
+};
+
+export type FileValidationResult<TSuccess = {}> =
+	| {
+		isValid: true;
+		isFileSaved: true;
+		fileInfo: FileInfo;
+	} & TSuccess
+	| {
+		isValid: true;
+		isFileSaved: false;
+	} & TSuccess
+	| {
+		isValid: false;
+		rejectReason: FileRejectedReason;
+		details?: string;
+	};
+
+
+export type FileValidationFn<TSuccess = {}> = (
+	props: FileValidationFnProps
+) => FileValidationResult<TSuccess> | Promise<FileValidationResult<TSuccess>>;

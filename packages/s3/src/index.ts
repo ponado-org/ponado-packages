@@ -8,10 +8,8 @@ import {
 import { getSignedUrl as getSignedUrlAWS } from "@aws-sdk/s3-request-presigner";
 import { fileTypeFromBuffer } from "file-type";
 import { Readable } from "node:stream";
-import { createId } from '@paralleldrive/cuid2'
 
 const DEFAULT_SIGNED_URL_EXPIRITY = 60 * 10
-
 
 async function streamToBuffer(stream: Readable): Promise<Buffer> {
 	const chunks: Buffer[] = [];
@@ -41,7 +39,7 @@ export async function detectFileType(buffer: Buffer) {
 	if (fileType) return fileType;
 
 	// THEN: Check if it's likely binary (high ratio of non-printable chars)
-	const sample = buffer.slice(0, Math.min(8192, buffer.length));
+	const sample = buffer.subarray(0, Math.min(8192, buffer.length));
 	const nonPrintable = sample.filter(byte => byte < 32 && ![9, 10, 13].includes(byte)).length;
 	if (nonPrintable / sample.length > 0.3) {
 		return null; // Likely binary but unrecognized
@@ -118,14 +116,6 @@ export type FetchObjectResult = {
 	// error: null,
 	objectBuffer: Buffer
 }
-
-
-type BaseProps = {
-	// bucket?: string,
-	key: string,
-	// client: S3Client
-}
-
 
 export type SignedUrlResult = {
 	signedUrl: string;
@@ -219,24 +209,39 @@ export const createS3Client = (config: ClientProps) => {
 		return s3.send(command);
 	}
 
-
-	async function deleteObject(key: string): Promise<string | null> {
+	async function deleteObject({
+		key,
+		bucket = config.defaultBucket
+	}: {
+		key: string,
+		bucket?: string
+	}): Promise<string | null> {
 		try {
-			await s3.send(new DeleteObjectCommand({ Bucket: config.defaultBucket, Key: key }));
-			return null; // success, no error
+			await s3.send(
+				new DeleteObjectCommand({
+					Bucket: bucket,
+					Key: key
+				}));
+			return null;
 		} catch (error) {
 			return error instanceof Error ? error.message : String(error);
 		}
 	}
 
-	async function deleteObjectByPrefix(
-		keyOrPrefix: string
-	): Promise<{ deleted: string[]; error?: string }> {
+	async function deleteObjectByPrefix({
+		keyOrPrefix,
+		bucket = config.defaultBucket
+	}: {
+		keyOrPrefix: string,
+		bucket?: string,
+	}): Promise<{ deleted: string[]; error?: string }> {
 		try {
+
+
 			// List all objects matching the prefix
 			const listResult = await s3.send(
 				new ListObjectsV2Command({
-					Bucket: config.defaultBucket,
+					Bucket: bucket,
 					Prefix: keyOrPrefix
 				})
 			);
@@ -266,10 +271,16 @@ export const createS3Client = (config: ClientProps) => {
 	}
 
 
-	async function deleteObjects(...keys: string[]): Promise<string | null> {
+	async function deleteObjects({
+		bucket = config.defaultBucket,
+		keys,
+	}: {
+		keys: string[],
+		bucket?: string
+	}): Promise<string | null> {
 		try {
 			await s3.send(new DeleteObjectsCommand({
-				Bucket: config.defaultBucket,
+				Bucket: bucket,
 				Delete: {
 					Objects: keys.map(Key => ({ Key })),
 					Quiet: false
@@ -282,11 +293,19 @@ export const createS3Client = (config: ClientProps) => {
 	}
 
 
-	async function getSignedUrl(props: BaseProps & { expirityTime?: number }): Promise<SignedUrlResult> {
+	async function getSignedUrl({
+		key,
+		bucket = config.defaultBucket,
+		expirityTime
+	}: {
+		key: string,
+		bucket?: string,
+		expirityTime?: number
+	}): Promise<SignedUrlResult> {
 
 		try {
-			const command = new GetObjectCommand({ Bucket: config.defaultBucket, Key: props.key });
-			const expireIn = props.expirityTime ?? DEFAULT_SIGNED_URL_EXPIRITY;
+			const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+			const expireIn = expirityTime ?? DEFAULT_SIGNED_URL_EXPIRITY;
 			const signedUrl = await getSignedUrlAWS(s3, command, {
 				expiresIn: expireIn,
 			});
@@ -305,9 +324,15 @@ export const createS3Client = (config: ClientProps) => {
 		}
 	}
 
-	async function getObject(props: BaseProps): Promise<FetchObjectResult> {
+	async function getObject({
+		key,
+		bucket = config.defaultBucket
+	}: {
+		key: string,
+		bucket?: string
+	}): Promise<FetchObjectResult> {
 		try {
-			const { Body } = await s3.send(new GetObjectCommand({ Bucket: config.defaultBucket, Key: props.key }));
+			const { Body } = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
 			if (!(Body instanceof Readable)) return { error: 'Invalid stream returned.' };
 			return { objectBuffer: await streamToBuffer(Body) };
 		} catch (err: any) {
@@ -316,9 +341,15 @@ export const createS3Client = (config: ClientProps) => {
 	}
 
 
-	type SaveProps = { file: Buffer | ArrayBuffer | File, fileId?: string };
-
-	async function uploadObject({ file, fileId }: SaveProps) {
+	async function uploadObject({
+		file,
+		fileId,
+		bucket = config.defaultBucket,
+	}: {
+		file: Buffer | Blob | ArrayBuffer | File,
+		fileId: string,
+		bucket?: string,
+	}) {
 		try {
 			let fileBuffer: Buffer;
 
@@ -327,35 +358,32 @@ export const createS3Client = (config: ClientProps) => {
 				fileBuffer = file;
 			} else if (file instanceof ArrayBuffer) {
 				fileBuffer = Buffer.from(file);
-			} else if (file instanceof File) {
+			} else if (file instanceof Blob) {
 				fileBuffer = Buffer.from(await file.arrayBuffer());
 			} else {
 				throw new Error("Unsupported file type");
 			}
 
-			const fileType = await detectFileType(fileBuffer);
+			const fileTypeResult = await detectFileType(fileBuffer);
 
-			if (!fileType) {
+			if (!fileTypeResult) {
 				throw new Error("Could not determine file type from buffer.")
 			}
 
-			if (!fileId) {
-				fileId = createId()
-			}
-			let key = `${fileId}.${fileType.ext}`
+			let key = `${fileId}.${fileTypeResult.ext}`
 
 			await s3.send(
 				new PutObjectCommand({
-					Bucket: config.defaultBucket,
+					Bucket: bucket,
 					Key: key,
 					Body: fileBuffer,
-					ContentType: fileType.mime,
+					ContentType: fileTypeResult.mime,
 				})
 			);
 
 			return {
-				extension: fileType.ext,
-				mimeType: fileType.mime,
+				extension: fileTypeResult.ext,
+				mimeType: fileTypeResult.mime,
 				fileId,
 				key
 			};
@@ -365,21 +393,21 @@ export const createS3Client = (config: ClientProps) => {
 		}
 	}
 
-	type SaveReplaceProps = | { file: Buffer | ArrayBuffer | File; key?: string };
+	type SaveReplaceProps = | { file: Buffer | ArrayBuffer | File, fileId: string; key?: string };
 
-	async function saveOrReplaceObject({ file, key }: SaveReplaceProps) {
+	async function saveOrReplaceObject({ file, key, fileId }: SaveReplaceProps) {
 
 		// remove existing file if there is one
 		if (key) {
 			try {
-				await deleteObject(key);
+				await deleteObject({ key });
 			} catch (err) {
 				console.error('Failed to delete old file:', err);
 			}
 		}
 
 		// upload the new one
-		const fileResult = await uploadObject({ file });
+		const fileResult = await uploadObject({ file, fileId });
 
 		if (!fileResult.fileId) throw new Error('File upload failed');
 
@@ -397,5 +425,4 @@ export const createS3Client = (config: ClientProps) => {
 		getObject,
 		deleteObjectByPrefix,
 	};
-
 };

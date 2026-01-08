@@ -1,10 +1,12 @@
 import type { BadgeProps, SelectOption } from "../types";
 
-export const badgeVariants = {
+export const ponadoBadgeVariants = {
 	base: 'select-none focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium transition-[color,box-shadow] focus-visible:ring-[3px] [&>svg]:pointer-events-none [&>svg]:size-3',
 	variants: {
 		variant: {
 			green: 'dark:bg-green-400/30 bg-green-400/30 hover:bg-green-300/50 border-transparent',
+			'green-outline':
+				'dark:bg-green-400/30  bg-green-100 hover:bg-green-400/40 border border-green-700 border-dashed',
 			blue: 'dark:bg-blue-400/30 bg-blue-200/80  hover:bg-blue-400/40 border-transparent',
 			purple: 'dark:bg-purple-400/30 bg-purple-200/80  hover:bg-purple-300/80 border-transparent',
 			yellow: 'dark:bg-yellow-400/30 bg-yellow-200/80  hover:bg-yellow-300/80 border-transparent',
@@ -61,10 +63,10 @@ export const badgeVariants = {
 	defaultVariants: {
 		variant: 'default'
 	}
-};
+} as const;
 
 // export type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
-export type BadgeVariant = keyof typeof badgeVariants.variants.variant;
+export type BadgeVariant = keyof typeof ponadoBadgeVariants.variants.variant;
 // ============== Generic status =================
 //
 

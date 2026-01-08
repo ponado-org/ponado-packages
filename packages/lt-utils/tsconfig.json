@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		// Module system
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"target": "ES2020",
+
+		// Output
+		"outDir": "./dist",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+
+		// Quality of life
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+
+		// Strictness (adjust to taste)
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		// For libraries
+		"lib": ["ES2020"]
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+}
