@@ -1,50 +1,48 @@
 {
-  "sideEffects": false,
   "name": "@ponado/document-utils",
-  "version": "1.1.14",
-  "author": "Adomas Poniskaitis",
-  "email": "adomas.poniskaitis@gmail.com",
-  "description": "Ponado document utils",
   "type": "module",
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "version": "0.0.2",
+  "description": "Shared utilities for working with documents in node environment",
+  "author": "Adomas Poniškaitis <adomas@ponado.lt>",
+  "license": "MIT",
+  "homepage": "https://github.com/author/library#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/author/library.git"
+  },
+  "bugs": {
+    "url": "https://github.com/author/library/issues"
+  },
   "exports": {
-    ".": "./dist/index.js",
+    ".": "./dist/index.mjs",
     "./server": "./dist/server/index.js",
     "./shared": "./dist/shared/index.js",
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "test": "vitest",
-    "release": "npm version patch && npm run build && npm publish",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "bumpp",
+    "prepublishOnly": "pnpm run build"
   },
   "devDependencies": {
-    "@ponado/lt-utils": "^1.0.26",
-    "@ponado/shared": "^1.0.79",
-    "@types/node": "^24.10.4",
-    "docx-merger": "^1.2.2",
-    "docxtemplater": "^3.67.6",
-    "pizzip": "^3.2.0",
-    "tslib": "^2.8.1",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.16"
+    "@types/node": "^25.5.0",
+    "@typescript/native-preview": "7.0.0-dev.20260328.1",
+    "bumpp": "^11.0.1",
+    "tsdown": "^0.21.7",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "dependencies": {
-    "p-limit": "^7.2.0",
-    "pdf-lib": "^1.17.1",
-    "xlsx-write-stream": "^1.0.3"
-  },
-  "peerDependencies": {
-    "@ponado/lt-utils": "^1.0.21",
-    "@ponado/shared": "^1.0.39",
     "docx-merger": "^1.2.2",
-    "docxtemplater": "^3.67.5",
-    "pizzip": "^3.2.0"
+    "docxtemplater": "^3.68.6",
+    "pdf-lib": "^1.17.1",
+    "pizzip": "^3.2.0",
+    "xlsx-write-stream": "^1.0.3"
   }
 }
