@@ -1,7 +1,7 @@
 {
   "name": "@ponado/document-utils",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Shared utilities for working with documents in node environment",
   "author": "Adomas Poniškaitis <adomas@ponado.lt>",
   "license": "MIT",
