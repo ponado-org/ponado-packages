@@ -1,7 +1,7 @@
 {
   "name": "@ponado/document-utils",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Shared utilities for working with documents in node environment",
   "author": "Adomas Poniškaitis <adomas@ponado.lt>",
   "license": "MIT",
@@ -15,8 +15,6 @@
   },
   "exports": {
     ".": "./dist/index.mjs",
-    "./server": "./dist/server/index.js",
-    "./shared": "./dist/shared/index.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -27,7 +25,7 @@
     "dev": "tsdown --watch",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
-    "release": "bumpp",
+    "release": "bumpp --execute='pnpm publish --no-git-checks'",
     "prepublishOnly": "pnpm run build"
   },
   "devDependencies": {
