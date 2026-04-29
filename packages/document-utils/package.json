@@ -1,7 +1,7 @@
 {
   "name": "@ponado/document-utils",
   "type": "module",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Shared utilities for working with documents in node environment",
   "author": "Adomas Poniškaitis <adomas@ponado.lt>",
   "license": "MIT",
@@ -15,6 +15,8 @@
   },
   "exports": {
     ".": "./dist/index.mjs",
+    "./server": "./dist/server/index.js",
+    "./shared": "./dist/shared/index.js",
     "./package.json": "./package.json"
   },
   "files": [
