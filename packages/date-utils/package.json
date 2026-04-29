@@ -1,31 +1,39 @@
 {
   "name": "@ponado/date-utils",
-  "version": "1.0.11",
-  "description": "Common utils related to representing and transforming dates",
   "type": "module",
+  "version": "0.0.2",
+  "description": "Common utils related to representing and transforming dates",
+  "author": "Adomas Poniškaitis <adomas@ponado.lt>",
+  "license": "MIT",
+  "homepage": "https://github.com/author/library#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/author/library.git"
+  },
+  "bugs": {
+    "url": "https://github.com/author/library/issues"
+  },
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": "./dist/index.js",
-    "./package.json": "./package.json"
-  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "test": "vitest",
-    "release": "npm version patch && npm run build && npm publish"
-  },
-  "peerDependencies": {
-    "@internationalized/date": "^3.10.0"
+    "typecheck": "tsc --noEmit",
+    "release": "bumpp",
+    "prepublishOnly": "pnpm run build"
   },
   "devDependencies": {
-    "@internationalized/date": "^3.10.0",
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "vitest": "^4.0.15"
+    "@types/node": "^25.5.0",
+    "@typescript/native-preview": "7.0.0-dev.20260328.1",
+    "bumpp": "^11.0.1",
+    "tsdown": "^0.21.7",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   }
 }
