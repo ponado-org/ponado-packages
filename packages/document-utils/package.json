@@ -1,7 +1,7 @@
 {
   "name": "@ponado/document-utils",
   "type": "module",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Shared utilities for working with documents in node environment",
   "author": "Adomas Poniškaitis <adomas@ponado.lt>",
   "license": "MIT",
@@ -15,8 +15,8 @@
   },
   "exports": {
     ".": "./dist/index.mjs",
-    "./server": "./dist/server/index.js",
-    "./shared": "./dist/shared/index.js",
+    "./server": "./dist/server/index.mjs",
+    "./shared": "./dist/shared/index.mjs",
     "./package.json": "./package.json"
   },
   "files": [
@@ -44,5 +44,9 @@
     "pdf-lib": "^1.17.1",
     "pizzip": "^3.2.0",
     "xlsx-write-stream": "^1.0.3"
+  },
+  "inlinedDependencies": {
+    "p-limit": "2.3.0",
+    "p-try": "2.2.0"
   }
 }
