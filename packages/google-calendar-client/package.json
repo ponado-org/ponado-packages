@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/google-calendar-client",
 	"type": "module",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Google calendar wrapper",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
