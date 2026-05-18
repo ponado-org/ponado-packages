@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/google-calendar-client",
 	"type": "module",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Google calendar wrapper",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
@@ -39,8 +39,5 @@
 	"dependencies": {
 		"@googleapis/calendar": "^14.2.0",
 		"google-auth-library": "^10.6.2"
-	},
-	"publishConfig": {
-		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
 	}
 }
