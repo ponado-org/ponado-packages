@@ -7,6 +7,7 @@ import {
 	ListBucketsCommand,
 	CreateBucketCommand
 } from '@aws-sdk/client-s3';
+
 import { getSignedUrl as getSignedUrlAWS } from '@aws-sdk/s3-request-presigner';
 import { fileTypeFromBuffer } from 'file-type';
 import { Readable } from 'node:stream';
@@ -114,26 +115,26 @@ export async function detectFileType(buffer: Buffer) {
 
 export type FetchObjectResult =
 	| {
-			ok: false;
-			error: string;
-			// objectBuffer: null
-	  }
+		ok: false;
+		error: string;
+		// objectBuffer: null
+	}
 	| {
-			ok: true;
-			objectBuffer: Buffer;
-	  };
+		ok: true;
+		objectBuffer: Buffer;
+	};
 
 export type SignedUrlResult =
 	| {
-			signedUrl: string;
-			expiresAt: number;
-			error?: null;
-	  }
+		signedUrl: string;
+		expiresAt: number;
+		error?: null;
+	}
 	| {
-			signedUrl: null;
-			expiresAt: null;
-			error: string;
-	  };
+		signedUrl: null;
+		expiresAt: null;
+		error: string;
+	};
 
 type ClientProps = {
 	region: string;
@@ -200,13 +201,9 @@ export const createS3Client = (config: ClientProps) => {
 	}
 
 	/** Allow sending any AWS command directly */
-	async function send<T>(command: T): Promise<unknown> {
-		// this keeps full typing if you pass a proper Command
-		// e.g. s3Client.send(new ListBucketsCommand())
-		// or s3Client.send(new GetObjectCommand({ Bucket, Key }))
-		// It’s effectively a type-safe passthrough.
-		// @ts-expect-error: allow generic commands
-		return s3.send(command);
+	async function send<TOutput>(command: unknown): Promise<TOutput> {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return s3.send(command as any) as Promise<TOutput>;
 	}
 
 	async function deleteObject({
