@@ -13,7 +13,7 @@
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write .",
 		"clean": "pnpm --filter './packages/*' clean && rm -rf node_modules",
-		"release:patch": "pnpm build && pnpm --filter './packages/*' --sequential release:patch"
+		"release:patch": "bumpp --release patch --yes --commit=false --tag=false --no-publish && pnpm publish --no-git-checks"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

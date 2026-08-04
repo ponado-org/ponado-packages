@@ -1,6 +1,8 @@
 import { escapeRegexLiteral, substituteTemplate } from '../shared/index.js';
 import { createPlaceholderRegex } from '../shared/utils.js';
-import { executeCliWithFiles } from './cli-utils.js';
+import { NodeCompiler } from '@myriaddreamin/typst-ts-node-compiler';
+
+const compiler = NodeCompiler.create();
 
 export function escapeTypstString(str: string): string {
 	if (!str) return '';
@@ -26,13 +28,7 @@ export async function renderTypstTemplateWithData<T>(params: { data: T; template
  * Renders typst template to pdf buffer
  */
 export async function convertTypstToPdf(template: string): Promise<Buffer> {
-	const pdfBuffer = await executeCliWithFiles<string, Buffer>('typst', template, {
-		inputExt: 'typ',
-		outputExt: 'pdf',
-		buildArgs: (inputFile, outputFile) => ['compile', inputFile, '--format', 'pdf', outputFile]
-	});
-
-	return pdfBuffer;
+	return compiler.pdf({ mainFileContent: template });
 }
 
 export function substituteTypstTemplate({

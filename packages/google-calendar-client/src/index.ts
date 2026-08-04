@@ -7,7 +7,7 @@ interface Logger {
 	error(obj: object | string, msg?: string): void;
 }
 
-export const consoleLogger: Logger = {
+const consoleLogger: Logger = {
 	info: (obj, msg) => console.info(msg ?? obj, typeof obj === 'object' ? obj : ''),
 	warn: (obj, msg) => console.warn(msg ?? obj, typeof obj === 'object' ? obj : ''),
 	error: (obj, msg) => console.error(msg ?? obj, typeof obj === 'object' ? obj : ''),
@@ -15,15 +15,17 @@ export const consoleLogger: Logger = {
 
 type CalendarClientOptions = {
 	serviceAccountJson: string;
-	calendarId?: string;
-	calendarTitle?: string;
-	timeZone?: string;
+	defaultCalendarId?: string;
 	logger?: Logger;
 };
 
-export class CalendarClient {
+type CreateCalendarOptions = {
+	title: string;
+	timeZone?: string;
+};
+
+export class GoogleCalendarClient {
 	#client: ReturnType<typeof calendar> | null = null;
-	#calendarId: string | null = null;
 	#options: CalendarClientOptions | null = null;
 	#logger: Logger = consoleLogger;
 
@@ -32,14 +34,15 @@ export class CalendarClient {
 		return this.#client;
 	}
 
-	get #id() {
-		if (!this.#calendarId) throw new Error('Calendar ID not available');
-		return this.#calendarId;
+	/** Resolves a calendar ID, falling back to the configured default. */
+	#resolveId(calendarId?: string): string {
+		const id = calendarId ?? this.#options?.defaultCalendarId;
+		if (!id) throw new Error('No calendarId provided and no defaultCalendarId configured');
+		return id;
 	}
 
 	configure(options: CalendarClientOptions) {
 		this.#options = options;
-		this.#calendarId = options.calendarId ?? null;
 		if (options.logger) this.#logger = options.logger;
 	}
 
@@ -53,22 +56,28 @@ export class CalendarClient {
 		});
 
 		this.#client = calendar({ auth, version: 'v3' });
-
-		if (!this.#calendarId) {
-			const res = await this.#c.calendars.insert({
-				requestBody: {
-					summary: this.#options.calendarTitle,
-					timeZone: this.#options.timeZone ?? 'Europe/Vilnius'
-				}
-			});
-			this.#calendarId = res.data.id!;
-			this.#logger.info({ calendarId: this.#calendarId }, 'Initialized App Calendar ID');
-		}
 	}
 
-	async listAcls(): Promise<calendar_v3.Schema$AclRule[]> {
+	/** Creates a new calendar and returns its ID. */
+	async createCalendar({ title, timeZone = 'Europe/Vilnius' }: CreateCalendarOptions): Promise<string> {
+		const res = await this.#c.calendars.insert({
+			requestBody: { summary: title, timeZone }
+		});
+		const id = res.data.id!;
+		this.#logger.info({ calendarId: id }, 'Created calendar');
+		return id;
+	}
+
+	async deleteCalendar(calendarId: string): Promise<void> {
+		await this.#c.calendars.delete({ calendarId });
+		this.#logger.info({ calendarId }, 'Deleted calendar');
+	}
+
+	// ── ACL ──────────────────────────────────────────────────────────────────
+
+	async listAcls(calendarId?: string): Promise<calendar_v3.Schema$AclRule[]> {
 		try {
-			const res = await this.#c.acl.list({ calendarId: this.#id });
+			const res = await this.#c.acl.list({ calendarId: this.#resolveId(calendarId) });
 			return res.data.items ?? [];
 		} catch (err) {
 			const error = err as { code?: number; message?: string };
@@ -77,33 +86,8 @@ export class CalendarClient {
 		}
 	}
 
-	async deletePerson({ email }: { email: string }) {
-		const aclList = await this.#c.acl.list({ calendarId: this.#id });
-		const rule = aclList.data.items?.find(
-			(r) => r.scope?.type === 'user' && r.scope?.value === email
-		);
-
-		if (!rule?.id) {
-			this.#logger.warn(`No ACL found for ${email}`);
-			return;
-		}
-
-		await this.#c.acl.delete({ calendarId: this.#id, ruleId: rule.id });
-		this.#logger.info(`Removed ${email} from calendar ACL`);
-	}
-
-	async listEvents() {
-		const res = await this.#c.events.list({
-			calendarId: this.#id,
-			timeMin: new Date().toISOString(),
-			singleEvents: true,
-			orderBy: 'startTime'
-		});
-		return res.data.items;
-	}
-
-	async listPeople() {
-		const res = await this.#c.acl.list({ calendarId: this.#id });
+	async listPeople(calendarId?: string) {
+		const res = await this.#c.acl.list({ calendarId: this.#resolveId(calendarId) });
 		return (
 			res.data.items?.map((item) => ({
 				email: item.scope?.value,
@@ -113,18 +97,79 @@ export class CalendarClient {
 		);
 	}
 
-	async insertEvent(event: calendar_v3.Schema$Event): Promise<calendar_v3.Schema$Event> {
+	async invitePerson({
+		email,
+		role = 'reader',
+		calendarId
+	}: {
+		email: string;
+		role?: 'reader' | 'writer' | 'owner';
+		calendarId?: string;
+	}) {
+		const id = this.#resolveId(calendarId);
+		const res = await this.#c.acl.insert({
+			calendarId: id,
+			sendNotifications: true,
+			requestBody: { role, scope: { type: 'user', value: email } }
+		});
+		this.#logger.info(`Invited ${email} to calendar ${id} with role: ${role}`);
+		return res.data;
+	}
+
+	async deletePerson({ email, calendarId }: { email: string; calendarId?: string }) {
+		const id = this.#resolveId(calendarId);
+		const aclList = await this.#c.acl.list({ calendarId: id });
+		const rule = aclList.data.items?.find(
+			(r) => r.scope?.type === 'user' && r.scope?.value === email
+		);
+
+		if (!rule?.id) {
+			this.#logger.warn(`No ACL found for ${email} on calendar ${id}`);
+			return;
+		}
+
+		await this.#c.acl.delete({ calendarId: id, ruleId: rule.id });
+		this.#logger.info(`Removed ${email} from calendar ${id}`);
+	}
+
+	// ── Events ───────────────────────────────────────────────────────────────
+
+	async listEvents(calendarId?: string) {
+		const res = await this.#c.events.list({
+			calendarId: this.#resolveId(calendarId),
+			timeMin: new Date().toISOString(),
+			singleEvents: true,
+			orderBy: 'startTime'
+		});
+		return res.data.items;
+	}
+
+	async insertEvent({
+		event,
+		calendarId
+	}: {
+		event: calendar_v3.Schema$Event;
+		calendarId?: string;
+	}): Promise<calendar_v3.Schema$Event> {
 		const res = await this.#c.events.insert({
-			calendarId: this.#id,
+			calendarId: this.#resolveId(calendarId),
 			sendNotifications: false,
 			requestBody: event
 		});
 		return res.data;
 	}
 
-	async updateEvent({ eventId, event }: { eventId: string; event: calendar_v3.Schema$Event }): Promise<calendar_v3.Schema$Event> {
+	async updateEvent({
+		eventId,
+		event,
+		calendarId
+	}: {
+		eventId: string;
+		event: calendar_v3.Schema$Event;
+		calendarId?: string;
+	}): Promise<calendar_v3.Schema$Event> {
 		const res = await this.#c.events.update({
-			calendarId: this.#id,
+			calendarId: this.#resolveId(calendarId),
 			eventId,
 			sendUpdates: 'none',
 			requestBody: event
@@ -132,14 +177,11 @@ export class CalendarClient {
 		return res.data;
 	}
 
-	async deleteEvent(eventId: string) {
+	async deleteEvent({ eventId, calendarId }: { eventId: string; calendarId?: string }) {
+		const id = this.#resolveId(calendarId);
 		try {
-			await this.#c.events.delete({
-				calendarId: this.#id,
-				eventId,
-				sendUpdates: 'none'
-			});
-			this.#logger.info(`Removed event ${eventId} from calendar`);
+			await this.#c.events.delete({ calendarId: id, eventId, sendUpdates: 'none' });
+			this.#logger.info(`Removed event ${eventId} from calendar ${id}`);
 		} catch (err) {
 			const error = err as { code?: number };
 			if (error.code === 410) {
@@ -150,22 +192,21 @@ export class CalendarClient {
 		}
 	}
 
-	async clearAllEvents() {
-		this.#logger.info('Clearing all google events!!!');
-		const events = (await this.listEvents()) ?? [];
+	async clearAllEvents(calendarId?: string) {
+		const id = this.#resolveId(calendarId);
+		this.#logger.info(`Clearing all events from calendar ${id}`);
+		const events = (await this.listEvents(id)) ?? [];
 
 		if (events.length === 0) {
-			this.#logger.info('nothing to delete :)');
+			this.#logger.info('Nothing to delete :)');
 			return;
 		}
 
 		for (const event of events) {
 			if (event.id) {
-				this.#logger.info('deleting event: ' + event.id);
-				await this.deleteEvent(event.id);
+				this.#logger.info('Deleting event: ' + event.id);
+				await this.deleteEvent({ eventId: event.id, calendarId: id });
 			}
 		}
 	}
 }
-
-export const calendarClient = new CalendarClient();

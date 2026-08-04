@@ -2,7 +2,7 @@
  * Normalizes a Date to midnight UTC
  */
 export function normalizeToUTC(d: Date): Date {
-	return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0));
+	return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
 }
 
 /**
@@ -81,18 +81,20 @@ export function getDifferenceInDays(date1: Date, date2: Date): number {
  * @returns Date object representing the next anniversary
  */
 export function getAnniversaryDate(eventDate: Date, now: Date = new Date()) {
-	const thisYearAnniversary = new Date(
-		now.getFullYear(),
-		eventDate.getMonth(),
-		eventDate.getDate()
+	const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+	const thisYearAnniversary = Date.UTC(
+		now.getUTCFullYear(),
+		eventDate.getUTCMonth(),
+		eventDate.getUTCDate()
 	);
 
-	const anniversaryDate =
-		thisYearAnniversary < now
-			? new Date(now.getFullYear() + 1, eventDate.getMonth(), eventDate.getDate())
+	const anniversaryUTC =
+		thisYearAnniversary < todayUTC
+			? Date.UTC(now.getUTCFullYear() + 1, eventDate.getUTCMonth(), eventDate.getUTCDate())
 			: thisYearAnniversary;
 
-	return anniversaryDate;
+	return new Date(anniversaryUTC);
 }
 
 /**

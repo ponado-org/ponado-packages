@@ -39,6 +39,7 @@
 		"vitest": "^1.6.1"
 	},
 	"dependencies": {
+		"@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
 		"docx-merger": "^1.2.2",
 		"docxtemplater": "^3.68.7",
 		"pdf-lib": "^1.17.1",
