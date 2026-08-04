@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/document-utils",
 	"type": "module",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"description": "Shared utilities for working with documents in node environment",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
@@ -28,7 +28,7 @@
 		"test": "vitest",
 		"typecheck": "tsc --noEmit",
 		"clean": "rm -rf dist",
-		"release:patch": "bumpp --release patch --yes --commit=false --tag=false && pnpm publish --no-git-checks",
+		"release:patch": "bumpp --release patch --yes --no-commit --no-tag && pnpm publish --no-git-checks",
 		"prepublishOnly": "pnpm run build"
 	},
 	"devDependencies": {
