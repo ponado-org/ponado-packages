@@ -2,7 +2,7 @@
 	"name": "@ponado/sse",
 	"type": "module",
 	"version": "0.0.1",
-	"description": "Minimal typed SSE client (browser EventSource)",
+	"description": "Typed Server-Sent Events client (fetch-based) + server stream helpers",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
 	"homepage": "https://github.com/author/library#readme",
@@ -15,6 +15,7 @@
 	},
 	"exports": {
 		".": "./dist/index.mjs",
+		"./server": "./dist/server.mjs",
 		"./package.json": "./package.json"
 	},
 	"files": [

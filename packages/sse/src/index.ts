@@ -1,2 +1,3 @@
-export { createSseClient } from './client.js';
-export type { SseClient, SseEvent, SseHandlers } from './types.js';
+export { SseClient } from './client.js';
+export type { SseClientOptions, SseStatus, SseStatusListener } from './client.js';
+export type { SseEvent, SseEventMap } from './types.js';
