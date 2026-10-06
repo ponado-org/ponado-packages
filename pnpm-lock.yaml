@@ -125,6 +125,24 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.40)
 
+  packages/notifications:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.40
+        version: 20.19.41
+      bumpp:
+        specifier: ^11.1.0
+        version: 11.1.0
+      tsdown:
+        specifier: ^0.21.10
+        version: 0.21.10(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)
+
   packages/s3:
     dependencies:
       '@aws-sdk/client-s3':
@@ -152,6 +170,42 @@ importers:
       vitest:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.40)
+
+  packages/shortcuts:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.40
+        version: 20.19.41
+      bumpp:
+        specifier: ^11.1.0
+        version: 11.1.0
+      tsdown:
+        specifier: ^0.21.10
+        version: 0.21.10(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)
+
+  packages/sse:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.40
+        version: 20.19.41
+      bumpp:
+        specifier: ^11.1.0
+        version: 11.1.0
+      tsdown:
+        specifier: ^0.21.10
+        version: 0.21.10(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)
 
   packages/stockx-client:
     devDependencies:
