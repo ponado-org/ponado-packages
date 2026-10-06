@@ -1,26 +1,31 @@
 import { GoogleAuth } from 'google-auth-library';
 import { calendar, calendar_v3 } from '@googleapis/calendar';
 
-interface Logger {
+export interface Logger {
 	info(obj: object | string, msg?: string): void;
 	warn(obj: object | string, msg?: string): void;
 	error(obj: object | string, msg?: string): void;
 }
 
-const consoleLogger: Logger = {
+export const consoleLogger: Logger = {
 	info: (obj, msg) => console.info(msg ?? obj, typeof obj === 'object' ? obj : ''),
 	warn: (obj, msg) => console.warn(msg ?? obj, typeof obj === 'object' ? obj : ''),
-	error: (obj, msg) => console.error(msg ?? obj, typeof obj === 'object' ? obj : ''),
+	error: (obj, msg) => console.error(msg ?? obj, typeof obj === 'object' ? obj : '')
 };
 
-type CalendarClientOptions = {
+export type CalendarClientOptions = {
 	serviceAccountJson: string;
+	/** Existing calendar id. When omitted, `init()` creates a new calendar and uses it. */
 	defaultCalendarId?: string;
+	/** Title for the calendar created by `init()` when no id is configured. */
+	calendarTitle?: string;
+	/** IANA time zone for a calendar created by `init()` (default `Europe/Vilnius`). */
+	timeZone?: string;
 	logger?: Logger;
 };
 
-type CreateCalendarOptions = {
-	title: string;
+export type CreateCalendarOptions = {
+	title?: string;
 	timeZone?: string;
 };
 
@@ -46,8 +51,14 @@ export class GoogleCalendarClient {
 		if (options.logger) this.#logger = options.logger;
 	}
 
+	/** The id used when no per-call `calendarId` is passed. */
+	get defaultCalendarId(): string | undefined {
+		return this.#options?.defaultCalendarId;
+	}
+
 	async init() {
-		if (!this.#options) throw new Error('CalendarClient not configured — call configure() first');
+		if (!this.#options)
+			throw new Error('CalendarClient not configured — call configure() first');
 		if (this.#client) return;
 
 		const auth = new GoogleAuth({
@@ -56,10 +67,23 @@ export class GoogleCalendarClient {
 		});
 
 		this.#client = calendar({ auth, version: 'v3' });
+
+		// No calendar configured — create one and use it as the default for
+		// this process. Persist the returned id to reuse it across restarts.
+		if (!this.#options.defaultCalendarId) {
+			const calendarId = await this.createCalendar({
+				title: this.#options.calendarTitle,
+				timeZone: this.#options.timeZone
+			});
+			this.#options = { ...this.#options, defaultCalendarId: calendarId };
+		}
 	}
 
 	/** Creates a new calendar and returns its ID. */
-	async createCalendar({ title, timeZone = 'Europe/Vilnius' }: CreateCalendarOptions): Promise<string> {
+	async createCalendar({
+		title,
+		timeZone = 'Europe/Vilnius'
+	}: CreateCalendarOptions): Promise<string> {
 		const res = await this.#c.calendars.insert({
 			requestBody: { summary: title, timeZone }
 		});
@@ -209,4 +233,11 @@ export class GoogleCalendarClient {
 			}
 		}
 	}
+}
+
+/** Creates a client with `options` applied. The instance still requires `init()`. */
+export function createGoogleCalendarClient(options: CalendarClientOptions): GoogleCalendarClient {
+	const client = new GoogleCalendarClient();
+	client.configure(options);
+	return client;
 }

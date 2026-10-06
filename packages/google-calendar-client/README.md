@@ -15,59 +15,67 @@ The client requires a Google service account with the **Google Calendar API** en
 ## Usage
 
 ```typescript
-import { calendarClient, consoleLogger } from '@ponado/google-calendar-client';
+import { consoleLogger, createGoogleCalendarClient } from '@ponado/google-calendar-client';
 
-calendarClient.configure({
-  serviceAccountJson: process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
-  calendarTitle: 'My App Calendar',   // used only when creating a new calendar
-  timeZone: 'Europe/Vilnius',         // defaults to Europe/Vilnius
-  logger: consoleLogger,              // optional, defaults to consoleLogger
+const calendarClient = createGoogleCalendarClient({
+	serviceAccountJson: process.env.GOOGLE_SERVICE_ACCOUNT_JSON!,
+	defaultCalendarId: process.env.GOOGLE_CALENDAR_ID, // optional
+	calendarTitle: 'My App Calendar', // used only when creating a new calendar
+	timeZone: 'Europe/Vilnius', // defaults to Europe/Vilnius
+	logger: consoleLogger // optional, defaults to consoleLogger
 });
 
 await calendarClient.init();
 ```
 
-If `calendarId` is omitted, a new calendar is created on first `init()` and the ID is stored in memory. To reuse an existing calendar across restarts, persist the ID and pass it as `calendarId`.
+If `defaultCalendarId` is omitted, a new calendar is created on `init()` and used for the lifetime of the process. Read it back via `calendarClient.defaultCalendarId` and persist it to reuse the same calendar across restarts.
 
-```typescript
-calendarClient.configure({
-  serviceAccountJson: process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
-  calendarId: process.env.GOOGLE_CALENDAR_ID,
-});
-```
+`new GoogleCalendarClient()` + `configure(options)` is equivalent when you prefer constructing the class directly.
 
 ## API
 
 ### `configure(options)`
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `serviceAccountJson` | `string` | ✓ | Raw JSON string of the service account credentials |
-| `calendarId` | `string` | | ID of an existing calendar to use |
-| `calendarTitle` | `string` | | Title for a newly created calendar |
-| `timeZone` | `string` | | Timezone for a newly created calendar (default: `Europe/Vilnius`) |
-| `logger` | `Logger` | | Logger instance (default: `consoleLogger`) |
+| Option               | Type     | Required | Description                                                             |
+| -------------------- | -------- | -------- | ----------------------------------------------------------------------- |
+| `serviceAccountJson` | `string` | ✓        | Raw JSON string of the service account credentials                      |
+| `defaultCalendarId`  | `string` |          | Calendar used when a method is called without a `calendarId`            |
+| `calendarTitle`      | `string` |          | Title for a calendar created by `init()`                                |
+| `timeZone`           | `string` |          | Timezone for a calendar created by `init()` (default: `Europe/Vilnius`) |
+| `logger`             | `Logger` |          | Logger instance (default: `consoleLogger`)                              |
 
 ### `init()`
 
-Authenticates and connects the client. Creates a new calendar if no `calendarId` was provided. Must be called before any other method.
+Authenticates and connects the client. Creates a new calendar if no `defaultCalendarId` was provided. Must be called before any other method.
+
+### `defaultCalendarId`
+
+Getter for the calendar id used when a method receives no explicit `calendarId`.
+
+### Calendars
+
+```typescript
+calendarClient.createCalendar({ title, timeZone }); // creates a calendar, returns its id
+calendarClient.deleteCalendar(calendarId); // deletes a calendar
+```
 
 ### Events
 
 ```typescript
-calendarClient.listEvents()                          // upcoming events, ordered by start time
-calendarClient.insertEvent(event)                    // insert a Calendar v3 event, returns Schema$Event
-calendarClient.updateEvent({ eventId, event })       // update an existing event, returns Schema$Event
-calendarClient.deleteEvent(eventId)                  // delete an event (410 already-deleted is silently ignored)
-calendarClient.clearAllEvents()                      // delete all upcoming events
+calendarClient.listEvents(calendarId?)                    // upcoming events, ordered by start time
+calendarClient.insertEvent({ event, calendarId? })        // insert a Calendar v3 event, returns Schema$Event
+calendarClient.updateEvent({ eventId, event, calendarId? }) // update an event, returns Schema$Event
+calendarClient.deleteEvent({ eventId, calendarId? })      // delete an event (410 already-deleted is silently ignored)
+calendarClient.clearAllEvents(calendarId?)                // delete all upcoming events
 ```
 
 ### ACL / People
 
 ```typescript
-calendarClient.listAcls()                            // raw ACL rules
-calendarClient.listPeople()                          // [{ email, type, role }]
-calendarClient.deletePerson({ email })               // remove a user from the calendar ACL
+calendarClient.listAcls(calendarId?)                      // raw ACL rules
+calendarClient.listPeople(calendarId?)                    // [{ email, type, role }]
+calendarClient.invitePerson({ email, role?, calendarId? }) // defaults to role "reader"
+calendarClient.deletePerson({ email, calendarId? })       // remove a user from the calendar ACL
 ```
 
 ## Custom Logger
@@ -75,19 +83,19 @@ calendarClient.deletePerson({ email })               // remove a user from the c
 The package ships with `consoleLogger` but accepts anything that implements the `Logger` interface, including [pino](https://getpino.io/) directly.
 
 ```typescript
-import { Logger } from '@ponad/google-calendar-client';
+import { createGoogleCalendarClient, type Logger } from '@ponado/google-calendar-client';
 import pino from 'pino';
 
 const logger = pino();
 
 // pino already satisfies the Logger interface
-calendarClient.configure({ ..., logger });
+const calendarClient = createGoogleCalendarClient({ ...config, logger });
 ```
 
 ```typescript
 export interface Logger {
-  info(obj: object | string, msg?: string): void;
-  warn(obj: object | string, msg?: string): void;
-  error(obj: object | string, msg?: string): void;
+	info(obj: object | string, msg?: string): void;
+	warn(obj: object | string, msg?: string): void;
+	error(obj: object | string, msg?: string): void;
 }
 ```
