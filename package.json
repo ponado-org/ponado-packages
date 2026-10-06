@@ -1,5 +1,5 @@
 {
-	"name": "@ponado/utils-monorepo",
+	"name": "ponado-packages",
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
