@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/email-client",
 	"type": "module",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Amazon SES email client (nodemailer transport, dry-run, injected logger)",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
