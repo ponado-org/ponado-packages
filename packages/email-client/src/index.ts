@@ -41,6 +41,8 @@ export type EmailClientOptions<TMeta = undefined> = {
 	secretAccessKey: string;
 	/** Default sender identity; per-send `from` overrides it. */
 	from: EmailAddress;
+	/** Default Reply-To; per-send `replyTo` overrides it. */
+	replyTo?: EmailAddress;
 	/** AWS region (default `eu-north-1`). */
 	region?: string;
 	/** Log instead of sending — useful outside production (default `false`). */
@@ -86,6 +88,7 @@ export type EmailSentEvent<TMeta = undefined> = {
 
 export class EmailClient<TMeta = undefined> {
 	#defaultFrom: Options['from'];
+	#defaultReplyTo: Options['replyTo'];
 	#transporter: Transporter;
 	#dryRun: boolean;
 	#logger: EmailLogger;
@@ -93,6 +96,7 @@ export class EmailClient<TMeta = undefined> {
 
 	constructor(options: EmailClientOptions<TMeta>) {
 		this.#defaultFrom = options.from as Options['from'];
+		this.#defaultReplyTo = options.replyTo as Options['replyTo'];
 		this.#dryRun = options.dryRun ?? false;
 		this.#logger = options.logger ?? console;
 		this.#onSent = options.onSent;
@@ -154,7 +158,7 @@ export class EmailClient<TMeta = undefined> {
 			const info = await this.#transporter.sendMail({
 				from: (props.from ?? this.#defaultFrom) as Options['from'],
 				to: props.to as Options['to'],
-				replyTo: props.replyTo as Options['replyTo'],
+				replyTo: (props.replyTo ?? this.#defaultReplyTo) as Options['replyTo'],
 				subject: props.subject,
 				html: props.html,
 				headers,
