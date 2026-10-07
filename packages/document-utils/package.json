@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/document-utils",
 	"type": "module",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"description": "Shared utilities for working with documents in node environment",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
@@ -39,7 +39,6 @@
 		"vitest": "^1.6.1"
 	},
 	"dependencies": {
-		"@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
 		"docx-merger": "^1.2.2",
 		"docxtemplater": "^3.68.7",
 		"pdf-lib": "^1.17.1",
