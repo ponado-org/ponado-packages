@@ -67,6 +67,26 @@ const filledPdf = await fillPdfForm(pdfBuffer, { field1: 'value1' });
 - `@ponado/document-utils/server` - Server-side document processing
 - `@ponado/document-utils/shared` - Shared utilities (same as main export)
 
+## Typst rendering
+
+Typst -> PDF rendering is delegated to the shared `ponado-typst` HTTP service
+(Gotenberg-style sidecar; see `ponado-typst/` in the ponado repo). Set
+`TYPST_URL` in the server environment, e.g. `http://ponado-typst:3100`:
+
+```typescript
+import { convertTypstToPdf, renderTypstTemplateWithData } from '@ponado/document-utils/server';
+
+const pdf = await convertTypstToPdf('= Hello\n#set text(size: 12pt)');
+
+const filled = await renderTypstTemplateWithData({
+	template: '#let inputData = json(bytes(({{inputData}})))\n#inputData.title',
+	data: { title: 'Hello' }
+});
+```
+
+No typst compiler is bundled in this package - if `TYPST_URL` is missing the
+render call throws with a clear message.
+
 ## Features
 
 - **DOCX Templates**: Fill Word documents with template variables
