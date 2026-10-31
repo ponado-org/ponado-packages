@@ -6,6 +6,7 @@ A monorepo of utility packages for TypeScript/Node.js projects.
 
 | Package                                             | Version | Description                                     |
 | --------------------------------------------------- | ------- | ----------------------------------------------- |
+| [@ponado/docker-image](./packages/docker-image)     | 0.5.0   | Build, tag and mirror Docker images             |
 | [@ponado/date-utils](./packages/date-utils)         | 0.0.1   | Date formatting and transformation utilities    |
 | [@ponado/document-utils](./packages/document-utils) | 0.0.6   | Document processing utilities (DOCX, PDF, XLSX) |
 | [@ponado/lt-utils](./packages/lt-utils)             | 0.0.3   | Lithuanian language utilities                   |
