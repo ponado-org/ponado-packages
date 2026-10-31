@@ -5,7 +5,9 @@ import {
 	GetObjectCommand,
 	DeleteObjectsCommand,
 	ListBucketsCommand,
-	CreateBucketCommand
+	CreateBucketCommand,
+	ListObjectsV2Command,
+	CopyObjectCommand
 } from '@aws-sdk/client-s3';
 
 import { getSignedUrl as getSignedUrlAWS } from '@aws-sdk/s3-request-presigner';
@@ -146,8 +148,6 @@ type ClientProps = {
 	};
 	forcePathStyle: boolean;
 };
-
-import { ListObjectsV2Command, CopyObjectCommand } from '@aws-sdk/client-s3';
 
 export const createS3Client = (config: ClientProps) => {
 	const s3 = new S3Client(config);
