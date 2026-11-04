@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
-import { detectFileType } from '@src/index';
+import { detectFileType } from '../src/index';
 import { fileURLToPath } from 'url';
 import path from 'path';
 

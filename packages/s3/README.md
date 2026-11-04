@@ -57,8 +57,9 @@ await s3.deleteObjectByPrefix({ keyOrPrefix: 'folder/' });
 Creates an S3 client instance with the following methods:
 
 - `uploadObject({ file, fileId, bucket? })` - Upload a file with auto-detected type
+- `putObject({ key, file, contentType, bucket? })` - Upload bytes under an explicit key
 - `getObject({ key, bucket? })` - Download a file as a Buffer
-- `getSignedUrl({ key, bucket?, expirityTime? })` - Generate a pre-signed URL
+- `getSignedUrl({ key, bucket?, expirityTime?, filename?, download? })` - Generate a pre-signed URL
 - `deleteObject({ key, bucket? })` - Delete a single object
 - `deleteObjects({ keys, bucket? })` - Delete multiple objects
 - `deleteObjectByPrefix({ keyOrPrefix, bucket? })` - Delete all objects matching a prefix
@@ -66,4 +67,5 @@ Creates an S3 client instance with the following methods:
 - `cloneBucket({ sourceBucket, targetBucket, fromPrefix?, toPrefix? })` - Copy objects between buckets
 - `listBuckets()` - List all buckets
 - `createBucket({ name })` - Create a new bucket
+- `bucketExists({ bucket? })` - Check whether a bucket exists and is reachable
 - `send(command)` - Send raw AWS SDK commands

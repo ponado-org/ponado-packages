@@ -10,7 +10,8 @@ A monorepo of utility packages for TypeScript/Node.js projects.
 | [@ponado/date-utils](./packages/date-utils)         | 0.0.1   | Date formatting and transformation utilities    |
 | [@ponado/document-utils](./packages/document-utils) | 0.0.6   | Document processing utilities (DOCX, PDF, XLSX) |
 | [@ponado/lt-utils](./packages/lt-utils)             | 0.0.3   | Lithuanian language utilities                   |
-| [@ponado/s3](./packages/s3)                         | 0.0.2   | AWS S3 wrapper with common operations           |
+| [@ponado/s3](./packages/s3)                         | 0.0.8   | AWS S3 wrapper with common operations           |
+| [@ponado/storage](./packages/storage)               | 0.0.1   | Local filesystem + S3 file storage backends     |
 | [@ponado/stockx-client](./packages/stockx-client)   | 0.0.5   | StockX API client wrapper                       |
 
 ## Getting Started

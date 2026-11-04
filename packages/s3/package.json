@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/s3",
 	"type": "module",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"description": "Common aws s3 package wrapper method, for easier management",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
@@ -26,7 +26,7 @@
 		"test": "vitest",
 		"typecheck": "tsc --noEmit",
 		"clean": "rm -rf dist",
-		"release:patch": "bumpp --release patch --yes --commit=false --tag=false && pnpm publish --no-git-checks",
+		"release:patch": "bumpp --release patch --yes --no-commit --no-tag && pnpm publish --no-git-checks",
 		"prepublishOnly": "pnpm run build"
 	},
 	"devDependencies": {

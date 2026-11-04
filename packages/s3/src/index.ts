@@ -6,6 +6,7 @@ import {
 	DeleteObjectsCommand,
 	ListBucketsCommand,
 	CreateBucketCommand,
+	HeadBucketCommand,
 	ListObjectsV2Command,
 	CopyObjectCommand
 } from '@aws-sdk/client-s3';
@@ -117,26 +118,26 @@ export async function detectFileType(buffer: Buffer) {
 
 export type FetchObjectResult =
 	| {
-		ok: false;
-		error: string;
-		// objectBuffer: null
-	}
+			ok: false;
+			error: string;
+			// objectBuffer: null
+	  }
 	| {
-		ok: true;
-		objectBuffer: Buffer;
-	};
+			ok: true;
+			objectBuffer: Buffer;
+	  };
 
 export type SignedUrlResult =
 	| {
-		signedUrl: string;
-		expiresAt: number;
-		error?: null;
-	}
+			signedUrl: string;
+			expiresAt: number;
+			error?: null;
+	  }
 	| {
-		signedUrl: null;
-		expiresAt: null;
-		error: string;
-	};
+			signedUrl: null;
+			expiresAt: null;
+			error: string;
+	  };
 
 type ClientProps = {
 	region: string;
@@ -309,11 +310,15 @@ export const createS3Client = (config: ClientProps) => {
 	async function getSignedUrl({
 		key,
 		bucket = config.defaultBucket,
-		expirityTime
+		expirityTime,
+		filename,
+		download = false
 	}: {
 		key: string;
 		bucket?: string;
 		expirityTime?: number;
+		filename?: string;
+		download?: boolean;
 	}): Promise<SignedUrlResult> {
 		if (!bucket) {
 			throw new Error(
@@ -322,7 +327,18 @@ export const createS3Client = (config: ClientProps) => {
 		}
 
 		try {
-			const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+			// Keep the original filename when the browser saves the object,
+			// while stripping characters that could break the header.
+			const safeFilename = filename?.replace(/["\\\r\n]/g, '_');
+			const command = new GetObjectCommand({
+				Bucket: bucket,
+				Key: key,
+				...(safeFilename
+					? {
+							ResponseContentDisposition: `${download ? 'attachment' : 'inline'}; filename="${safeFilename}"`
+						}
+					: {})
+			});
 			const expireIn = expirityTime ?? DEFAULT_SIGNED_URL_EXPIRITY;
 			const signedUrl = await getSignedUrlAWS(s3, command, {
 				expiresIn: expireIn
@@ -364,6 +380,41 @@ export const createS3Client = (config: ClientProps) => {
 				ok: false,
 				error: `Failed to get object: ${err instanceof Error ? err.message : 'unknown error'}`
 			};
+		}
+	}
+
+	async function putObject({
+		key,
+		file,
+		contentType,
+		bucket = config.defaultBucket
+	}: {
+		key: string;
+		file: Buffer | ArrayBuffer;
+		contentType: string;
+		bucket?: string;
+	}) {
+		if (!bucket) {
+			throw new Error(
+				'Missing please provide bucket, or set default bucket on global instanstance'
+			);
+		}
+
+		try {
+			const fileBuffer = Buffer.isBuffer(file) ? file : Buffer.from(new Uint8Array(file));
+
+			await s3.send(
+				new PutObjectCommand({
+					Bucket: bucket,
+					Key: key,
+					Body: fileBuffer,
+					ContentType: contentType
+				})
+			);
+
+			return { key };
+		} catch (err) {
+			throw new Error(`Error saving file to S3: ${err}`, { cause: err });
 		}
 	}
 
@@ -440,6 +491,34 @@ export const createS3Client = (config: ClientProps) => {
 			return [];
 		}
 	}
+
+	async function bucketExists({
+		bucket = config.defaultBucket
+	}: {
+		bucket?: string;
+	} = {}): Promise<boolean> {
+		if (!bucket) {
+			throw new Error(
+				'Missing please provide bucket, or set default bucket on global instanstance'
+			);
+		}
+		try {
+			await s3.send(new HeadBucketCommand({ Bucket: bucket }));
+			return true;
+		} catch (error) {
+			// HeadBucket throws on both "not found" (404 / NotFound) and
+			// "exists but no access" (403 / Forbidden) - only treat NotFound as
+			// "doesn't exist". Other failures must surface to the caller.
+			if (error instanceof Error && ('name' in error || '$metadata' in error)) {
+				const errAny = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+				if (errAny.name === 'NotFound' || errAny.$metadata?.httpStatusCode === 404) {
+					return false;
+				}
+			}
+			throw error;
+		}
+	}
+
 	async function listBuckets() {
 		try {
 			const command = new ListBucketsCommand({});
@@ -496,8 +575,10 @@ export const createS3Client = (config: ClientProps) => {
 		send,
 		listBuckets,
 		createBucket,
+		bucketExists,
 		cloneBucket,
 		uploadObject,
+		putObject,
 		deleteObject,
 		deleteObjects,
 		getSignedUrl,
