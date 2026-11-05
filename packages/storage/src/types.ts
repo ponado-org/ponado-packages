@@ -53,6 +53,18 @@ export type StorageReadResult =
 	  }
 	| { kind: 'rangeNotSatisfiable'; total: number };
 
+/** An object discovered by `StorageBackend.list()`. */
+export interface StorageObjectInfo {
+	key: string;
+	lastModified?: Date;
+	size?: number;
+}
+
+export interface StorageListOptions {
+	/** Only return keys that start with this prefix. */
+	prefix?: string;
+}
+
 export interface StorageBackend<TProvider extends StorageProvider = StorageProvider> {
 	readonly provider: TProvider;
 
@@ -74,6 +86,15 @@ export interface StorageBackend<TProvider extends StorageProvider = StorageProvi
 
 	/** Delete an object. Missing objects are not an error. */
 	delete(key: string): Promise<void>;
+
+	/**
+	 * Delete many objects. Missing objects are not an error. Must throw when
+	 * any key was not deleted, so callers can keep their database rows.
+	 */
+	deleteMany(keys: string[]): Promise<void>;
+
+	/** List every object (optionally under a prefix). */
+	list(options?: StorageListOptions): Promise<StorageObjectInfo[]>;
 
 	/**
 	 * Resolve an object for delivery: a presigned redirect or a disk-backed

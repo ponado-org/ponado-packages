@@ -139,6 +139,12 @@ export type SignedUrlResult =
 			error: string;
 	  };
 
+export type ListedS3Object = {
+	key: string;
+	lastModified?: Date;
+	size?: number;
+};
+
 type ClientProps = {
 	region: string;
 	endpoint: string;
@@ -292,7 +298,7 @@ export const createS3Client = (config: ClientProps) => {
 		}
 
 		try {
-			await s3.send(
+			const result = await s3.send(
 				new DeleteObjectsCommand({
 					Bucket: bucket,
 					Delete: {
@@ -301,10 +307,65 @@ export const createS3Client = (config: ClientProps) => {
 					}
 				})
 			);
+
+			const errors = result.Errors ?? [];
+			if (errors.length > 0) {
+				return errors
+					.map(
+						(error) => `${error.Key ?? 'unknown key'}: ${error.Code ?? 'unknown error'}`
+					)
+					.join('; ');
+			}
+
 			return null; // success, no error
 		} catch (error) {
 			return error instanceof Error ? error.message : String(error);
 		}
+	}
+
+	/**
+	 * List every object in the bucket, optionally restricted to a key prefix.
+	 * Pagination is handled here so callers can treat the result as complete.
+	 */
+	async function listObjects({
+		bucket = config.defaultBucket,
+		prefix
+	}: {
+		bucket?: string;
+		prefix?: string;
+	} = {}): Promise<ListedS3Object[]> {
+		if (!bucket) {
+			throw new Error(
+				'Missing please provide bucket, or set default bucket on global instanstance'
+			);
+		}
+
+		const objects: ListedS3Object[] = [];
+		let continuationToken: string | undefined;
+
+		do {
+			const response = await s3.send(
+				new ListObjectsV2Command({
+					Bucket: bucket,
+					Prefix: prefix,
+					ContinuationToken: continuationToken,
+					MaxKeys: 1000
+				})
+			);
+
+			for (const object of response.Contents ?? []) {
+				if (!object.Key) continue;
+				objects.push({
+					key: object.Key,
+					lastModified: object.LastModified,
+					size: object.Size
+				});
+			}
+
+			continuationToken = response.NextContinuationToken;
+		} while (continuationToken);
+
+		return objects;
 	}
 
 	async function getSignedUrl({
@@ -581,6 +642,7 @@ export const createS3Client = (config: ClientProps) => {
 		putObject,
 		deleteObject,
 		deleteObjects,
+		listObjects,
 		getSignedUrl,
 		saveOrReplaceObject,
 		getObject,

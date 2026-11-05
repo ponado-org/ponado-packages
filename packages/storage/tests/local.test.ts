@@ -58,6 +58,43 @@ describe('local storage backend', () => {
 		await expect(backend.delete('missing.txt')).resolves.toBeUndefined();
 	});
 
+	it('lists objects with metadata and filters by prefix', async () => {
+		const { backend } = await makeBackend();
+
+		await backend.put({ key: 'a/one.txt', body: Buffer.from('1'), contentType: 'text/plain' });
+		await backend.put({ key: 'a/two.txt', body: Buffer.from('2'), contentType: 'text/plain' });
+		await backend.put({
+			key: 'b/three.txt',
+			body: Buffer.from('3'),
+			contentType: 'text/plain'
+		});
+
+		const all = await backend.list();
+		expect(all.map((object) => object.key).sort()).toEqual([
+			'a/one.txt',
+			'a/two.txt',
+			'b/three.txt'
+		]);
+		expect(all.every((object) => object.lastModified instanceof Date)).toBe(true);
+		expect(all.every((object) => typeof object.size === 'number')).toBe(true);
+
+		const prefixed = await backend.list({ prefix: 'a/' });
+		expect(prefixed.map((object) => object.key).sort()).toEqual(['a/one.txt', 'a/two.txt']);
+	});
+
+	it('deleteMany removes every key and is idempotent', async () => {
+		const { backend } = await makeBackend();
+
+		await backend.put({ key: 'one.txt', body: Buffer.from('1'), contentType: 'text/plain' });
+		await backend.put({ key: 'two.txt', body: Buffer.from('2'), contentType: 'text/plain' });
+
+		await backend.deleteMany(['one.txt', 'two.txt', 'missing.txt']);
+
+		await expect(backend.get('one.txt')).resolves.toBeNull();
+		await expect(backend.get('two.txt')).resolves.toBeNull();
+		await expect(backend.list()).resolves.toEqual([]);
+	});
+
 	it('opens a whole object as a stream', async () => {
 		const { backend } = await makeBackend();
 		const body = Buffer.from('stream me');

@@ -2,6 +2,8 @@ export type {
 	PutInput,
 	ServedRange,
 	StorageBackend,
+	StorageListOptions,
+	StorageObjectInfo,
 	StorageOpenOptions,
 	StorageProvider,
 	StorageReadResult

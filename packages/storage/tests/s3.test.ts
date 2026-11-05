@@ -8,6 +8,13 @@ function makeClient(overrides: Partial<S3StorageClient> = {}) {
 		expiresAt: Date.now() + 60_000,
 		error: null
 	}));
+	const listObjects = vi.fn(async () => [
+		{ key: 'abc.txt', lastModified: new Date('2026-01-01T00:00:00Z'), size: 9 }
+	]);
+	const deleteObjects = vi.fn(async ({ keys }: { keys: string[] }) => {
+		for (const key of keys) objects.delete(key);
+		return null;
+	});
 
 	const client: S3StorageClient = {
 		async putObject({ key, file }) {
@@ -24,11 +31,13 @@ function makeClient(overrides: Partial<S3StorageClient> = {}) {
 			objects.delete(key);
 			return null;
 		},
+		listObjects,
+		deleteObjects,
 		getSignedUrl: signedUrl,
 		...overrides
 	};
 
-	return { client, objects, signedUrl };
+	return { client, objects, signedUrl, listObjects, deleteObjects };
 }
 
 describe('S3 storage backend', () => {
@@ -56,6 +65,38 @@ describe('S3 storage backend', () => {
 		const backend = createS3Backend({ client });
 
 		await expect(backend.delete('abc.txt')).rejects.toThrow('permission denied');
+	});
+
+	it('lists objects through the injected client', async () => {
+		const { client, listObjects } = makeClient();
+		const backend = createS3Backend({ client, bucket: 'uploads' });
+
+		const objects = await backend.list({ prefix: 'a/' });
+
+		expect(objects).toEqual([
+			{ key: 'abc.txt', lastModified: new Date('2026-01-01T00:00:00Z'), size: 9 }
+		]);
+		expect(listObjects).toHaveBeenCalledWith({ bucket: 'uploads', prefix: 'a/' });
+	});
+
+	it('deleteMany uses the batch client and throws on per-key errors', async () => {
+		const deleteObjects = vi.fn(async () => 'abc.txt: AccessDenied');
+		const { client } = makeClient({ deleteObjects });
+		const backend = createS3Backend({ client, bucket: 'uploads' });
+
+		await expect(backend.deleteMany(['abc.txt'])).rejects.toThrow('AccessDenied');
+		expect(deleteObjects).toHaveBeenCalledWith({ keys: ['abc.txt'], bucket: 'uploads' });
+	});
+
+	it('deleteMany falls back to deleteObject when the client has no batch support', async () => {
+		const { client } = makeClient();
+		client.deleteObjects = undefined;
+		const backend = createS3Backend({ client });
+
+		await backend.put({ key: 'abc.txt', body: Buffer.from('x'), contentType: 'text/plain' });
+		await backend.deleteMany(['abc.txt', 'missing.txt']);
+
+		await expect(backend.get('abc.txt')).resolves.toBeNull();
 	});
 
 	it('redirects to a signed URL and forwards delivery options', async () => {

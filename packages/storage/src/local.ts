@@ -1,8 +1,15 @@
-import { access, mkdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import { constants, createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import { dirname, join, normalize, resolve, sep } from 'node:path';
-import type { PutInput, StorageBackend, StorageOpenOptions, StorageReadResult } from './types.js';
+import { dirname, join, normalize, relative, resolve, sep } from 'node:path';
+import type {
+	PutInput,
+	StorageBackend,
+	StorageListOptions,
+	StorageObjectInfo,
+	StorageOpenOptions,
+	StorageReadResult
+} from './types.js';
 
 type ParsedRange = { start: number; end: number };
 
@@ -68,6 +75,49 @@ export function createLocalBackend(rootDir: string): StorageBackend<'local'> {
 		}
 	}
 
+	/** Delete one key; missing keys are not an error. */
+	async function removeKey(key: string) {
+		const full = resolveKey(key);
+		try {
+			await unlink(full);
+		} catch (err) {
+			if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+		}
+	}
+
+	async function listObjects(options?: StorageListOptions): Promise<StorageObjectInfo[]> {
+		const prefix = options?.prefix ?? '';
+		const objects: StorageObjectInfo[] = [];
+
+		async function walk(dir: string) {
+			let entries;
+			try {
+				entries = await readdir(dir, { withFileTypes: true });
+			} catch (err) {
+				if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+				throw err;
+			}
+
+			for (const entry of entries) {
+				const fullPath = join(dir, entry.name);
+				if (entry.isDirectory()) {
+					await walk(fullPath);
+					continue;
+				}
+				if (!entry.isFile()) continue;
+
+				const key = relative(ROOT, fullPath).split(sep).join('/');
+				if (!key.startsWith(prefix)) continue;
+
+				const info = await stat(fullPath);
+				objects.push({ key, lastModified: info.mtime, size: info.size });
+			}
+		}
+
+		await walk(ROOT);
+		return objects;
+	}
+
 	return {
 		provider: 'local',
 
@@ -94,13 +144,16 @@ export function createLocalBackend(rootDir: string): StorageBackend<'local'> {
 		},
 
 		async delete(key: string): Promise<void> {
-			const full = resolveKey(key);
-			try {
-				await unlink(full);
-			} catch (err) {
-				if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+			await removeKey(key);
+		},
+
+		async deleteMany(keys: string[]): Promise<void> {
+			for (const key of keys) {
+				await removeKey(key);
 			}
 		},
+
+		list: listObjects,
 
 		async open(key: string, opts?: StorageOpenOptions): Promise<StorageReadResult | null> {
 			const file = await statKey(key);

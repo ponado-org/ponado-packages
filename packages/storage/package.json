@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/storage",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Provider-agnostic file storage contract with local filesystem and S3-compatible backends",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",

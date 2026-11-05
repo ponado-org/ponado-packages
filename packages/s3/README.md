@@ -40,6 +40,9 @@ const { objectBuffer } = await s3.getObject({ key: 'path/to/file' });
 await s3.deleteObject({ key: 'path/to/file' });
 await s3.deleteObjects({ keys: ['file1', 'file2'] });
 await s3.deleteObjectByPrefix({ keyOrPrefix: 'folder/' });
+
+// List objects (paginated internally)
+const objects = await s3.listObjects({ prefix: 'folder/' });
 ```
 
 ## Features
@@ -61,7 +64,8 @@ Creates an S3 client instance with the following methods:
 - `getObject({ key, bucket? })` - Download a file as a Buffer
 - `getSignedUrl({ key, bucket?, expirityTime?, filename?, download? })` - Generate a pre-signed URL
 - `deleteObject({ key, bucket? })` - Delete a single object
-- `deleteObjects({ keys, bucket? })` - Delete multiple objects
+- `deleteObjects({ keys, bucket? })` - Delete multiple objects; returns a combined error string if the service reports per-key failures
+- `listObjects({ bucket?, prefix? })` - List all objects, following continuation tokens
 - `deleteObjectByPrefix({ keyOrPrefix, bucket? })` - Delete all objects matching a prefix
 - `saveOrReplaceObject({ file, key?, fileId, bucket? })` - Replace existing file
 - `cloneBucket({ sourceBucket, targetBucket, fromPrefix?, toPrefix? })` - Copy objects between buckets

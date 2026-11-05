@@ -31,7 +31,8 @@ const storage = createStorage({
 await storage.get().init();
 await storage.get().put({ key: 'abc.txt', body, contentType: 'text/plain' });
 
-const result = await storage.get('s3').open('abc.txt', { filename: 'abc.txt' });
+const objects = await storage.get().list();
+const result = await storage.get().open('abc.txt', { filename: 'abc.txt' });
 // { kind: "redirect", url: "https://..." }
 ```
 
@@ -54,6 +55,9 @@ const local = createLocalBackend('/var/lib/app/uploads');
 - Rejects keys that escape the root directory.
 - Serves full objects and single byte ranges as streams.
 - `open()` returns `{ kind: "stream" }` or `{ kind: "rangeNotSatisfiable" }`.
+- `list()` walks the root and returns `{ key, lastModified, size }`; an
+  optional `prefix` filters keys.
+- `deleteMany()` deletes keys sequentially and throws if one fails.
 
 ### S3-compatible storage
 
@@ -94,6 +98,10 @@ const s3 = createS3Backend({
 - `check` is the startup probe. Without it, `bucketExists` is used when a
   bucket is configured.
 - `open()` returns `{ kind: "redirect", url }` with a presigned URL.
+- `list()` requires `listObjects` on the injected client and returns
+  `{ key, lastModified, size }`.
+- `deleteMany()` uses the client's `deleteObjects` batch method when available
+  and throws if the client reports a per-key error.
 
 ## The `open()` contract
 

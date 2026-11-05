@@ -1,4 +1,11 @@
-import type { PutInput, StorageBackend, StorageOpenOptions, StorageReadResult } from './types.js';
+import type {
+	PutInput,
+	StorageBackend,
+	StorageListOptions,
+	StorageObjectInfo,
+	StorageOpenOptions,
+	StorageReadResult
+} from './types.js';
 
 export type S3ObjectResult = { ok: true; objectBuffer: Buffer } | { ok: false; error: string };
 
@@ -20,6 +27,10 @@ export interface S3StorageClient {
 	}): Promise<{ key: string }>;
 	getObject(input: { key: string; bucket?: string }): Promise<S3ObjectResult>;
 	deleteObject(input: { key: string; bucket?: string }): Promise<string | null>;
+	/** Optional batch delete; must return an error string when any key failed. */
+	deleteObjects?(input: { keys: string[]; bucket?: string }): Promise<string | null>;
+	/** Optional bucket listing used by cleanup. */
+	listObjects?(input: { bucket?: string; prefix?: string }): Promise<StorageObjectInfo[]>;
 	getSignedUrl(input: {
 		key: string;
 		bucket?: string;
@@ -96,6 +107,29 @@ export function createS3Backend({
 		async delete(key: string): Promise<void> {
 			const error = await client.deleteObject({ key, bucket });
 			if (error) throw new Error(error);
+		},
+
+		async deleteMany(keys: string[]): Promise<void> {
+			if (keys.length === 0) return;
+
+			if (client.deleteObjects) {
+				const error = await client.deleteObjects({ keys, bucket });
+				if (error) throw new Error(error);
+				return;
+			}
+
+			// Fallback for clients without batch support: fail on the first key.
+			for (const key of keys) {
+				const error = await client.deleteObject({ key, bucket });
+				if (error) throw new Error(error);
+			}
+		},
+
+		async list(options?: StorageListOptions): Promise<StorageObjectInfo[]> {
+			if (!client.listObjects) {
+				throw new Error('storage: S3 client does not support listing objects');
+			}
+			return client.listObjects({ bucket, prefix: options?.prefix });
 		},
 
 		async open(key: string, opts?: StorageOpenOptions): Promise<StorageReadResult | null> {

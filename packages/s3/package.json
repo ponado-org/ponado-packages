@@ -1,7 +1,7 @@
 {
 	"name": "@ponado/s3",
 	"type": "module",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"description": "Common aws s3 package wrapper method, for easier management",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
