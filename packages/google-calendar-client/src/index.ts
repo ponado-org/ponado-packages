@@ -1,5 +1,34 @@
-import { GoogleAuth } from 'google-auth-library';
+import { JWT } from 'google-auth-library';
 import { calendar, calendar_v3 } from '@googleapis/calendar';
+
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
+
+type ServiceAccountJson = {
+	client_email?: string;
+	private_key?: string;
+};
+
+/** Builds a service-account auth client from a JSON key. */
+function createServiceAccountAuth(serviceAccountJson: string): JWT {
+	let credentials: ServiceAccountJson;
+	try {
+		credentials = JSON.parse(serviceAccountJson) as ServiceAccountJson;
+	} catch {
+		throw new Error('Invalid serviceAccountJson: expected a JSON service account key');
+	}
+
+	if (!credentials.client_email || !credentials.private_key) {
+		throw new Error(
+			'Invalid serviceAccountJson: "client_email" and "private_key" are required'
+		);
+	}
+
+	return new JWT({
+		email: credentials.client_email,
+		key: credentials.private_key,
+		scopes: [CALENDAR_SCOPE]
+	});
+}
 
 export interface Logger {
 	info(obj: object | string, msg?: string): void;
@@ -61,10 +90,7 @@ export class GoogleCalendarClient {
 			throw new Error('CalendarClient not configured — call configure() first');
 		if (this.#client) return;
 
-		const auth = new GoogleAuth({
-			credentials: JSON.parse(this.#options.serviceAccountJson),
-			scopes: ['https://www.googleapis.com/auth/calendar']
-		});
+		const auth = createServiceAccountAuth(this.#options.serviceAccountJson);
 
 		this.#client = calendar({ auth, version: 'v3' });
 
