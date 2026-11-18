@@ -1,14 +1,14 @@
 {
-	"name": "@ponado/lucide-codemod",
+	"name": "@ponado-org/lucide-codemod",
 	"type": "module",
 	"version": "0.0.1",
 	"description": "Codemod: per-icon @lucide/svelte imports named with the XIcon convention",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
-	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/lucide-codemod",
+	"homepage": "https://github.com/ponado-org/ponado-packages/tree/main/packages/lucide-codemod",
 	"repository": {
 		"type": "git",
-		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"url": "https://github.com/ponado-org/ponado-packages.git",
 		"directory": "packages/lucide-codemod"
 	},
 	"bin": {
@@ -42,7 +42,7 @@
 		"typescript": "^6.0.3",
 		"vitest": "^1.6.1"
 	},
-	"publishConfig": {
-		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	"bugs": {
+		"url": "https://github.com/ponado-org/ponado-packages/issues"
 	}
 }

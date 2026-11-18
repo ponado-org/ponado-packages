@@ -1,4 +1,4 @@
-# @ponado/lucide-codemod
+# @ponado-org/lucide-codemod
 
 Rewrites `@lucide/svelte` imports to individual icon paths and normalizes local
 names to the `…Icon` convention (`ShieldAlert` → `ShieldAlertIcon`), renaming
@@ -8,8 +8,8 @@ every icon.
 ## Usage
 
 ```bash
-pnpm dlx @ponado/lucide-codemod src
-pnpm dlx @ponado/lucide-codemod src --dry
+pnpm dlx @ponado-org/lucide-codemod src
+pnpm dlx @ponado-org/lucide-codemod src --dry
 ```
 
 - `[dir]` — directory to walk (default: `src`)

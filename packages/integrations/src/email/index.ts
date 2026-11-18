@@ -12,7 +12,7 @@ import type { Transporter } from 'nodemailer';
  *
  * ```ts
  * // src/lib/ponado-app/clients.server.ts
- * import { createEmailClient } from '@ponado/email-client';
+ * import { createEmailClient } from '@ponado-org/integrations/email';
  * import { logger } from '#lib/server/clients/index.js';
  * import { SES_ACCESS_KEY, SES_SECRET_ACCESS_KEY } from '$app/env/private';
  *

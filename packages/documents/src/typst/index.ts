@@ -8,7 +8,7 @@ import { createPlaceholderRegex } from '../shared/utils.js';
  * network.
  *
  * Keeping the engine out of this package is the point: importing
- * `@ponado/document-utils/server` must not pull
+ * `@ponado-org/documents/typst` must not pull
  * `@myriaddreamin/typst-ts-node-compiler` into app bundles anymore.
  */
 

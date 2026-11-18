@@ -1,14 +1,14 @@
 {
-	"name": "@ponado/docker-image",
+	"name": "@ponado-org/docker-image",
 	"type": "module",
 	"version": "0.5.0",
 	"description": "Build, tag and mirror Docker images with one shared policy",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
-	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/docker-image",
+	"homepage": "https://github.com/ponado-org/ponado-packages/tree/main/packages/docker-image",
 	"repository": {
 		"type": "git",
-		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"url": "https://github.com/ponado-org/ponado-packages.git",
 		"directory": "packages/docker-image"
 	},
 	"bin": {
@@ -41,7 +41,7 @@
 		"typescript": "^6.0.3",
 		"vitest": "^1.6.1"
 	},
-	"publishConfig": {
-		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	"bugs": {
+		"url": "https://github.com/ponado-org/ponado-packages/issues"
 	}
 }

@@ -1,4 +1,4 @@
-# @ponado/docker-image
+# @ponado-org/docker-image
 
 One shared build / tag / mirror policy for Docker images.
 
@@ -19,7 +19,7 @@ The Docker build itself is still plain `docker buildx build`.
 ## Install
 
 ```bash
-pnpm add -D @ponado/docker-image
+pnpm add -D @ponado-org/docker-image
 ```
 
 ## Configure
@@ -196,7 +196,7 @@ builder that means QEMU emulation. Only add amd64 if a consumer needs it.
 
 ## Migrating a repo from build-push.sh
 
-1. `pnpm add -D @ponado/docker-image`.
+1. `pnpm add -D @ponado-org/docker-image`.
 2. Copy the `dockerImage` config into `package.json` and change the image names.
 3. Delete the repo's `build-push.sh`; the CLI replaces it:
    `pnpm exec ponado-docker-image --mode prod`.

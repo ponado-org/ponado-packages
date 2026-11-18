@@ -15,7 +15,7 @@ import {
 	type BuildOptions
 } from './plan.js';
 
-const HELP = `@ponado/docker-image — build, tag and mirror Docker images
+const HELP = `@ponado-org/docker-image — build, tag and mirror Docker images
 
 Usage:
   ponado-docker-image [build] [tag] [options]

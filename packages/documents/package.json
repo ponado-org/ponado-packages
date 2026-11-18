@@ -1,14 +1,14 @@
 {
-	"name": "@ponado/documents",
+	"name": "@ponado-org/documents",
 	"type": "module",
 	"version": "0.1.0",
 	"description": "Document tooling with per-format subpaths: DOCX, PDF, XLSX and Typst",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
-	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/documents",
+	"homepage": "https://github.com/ponado-org/ponado-packages/tree/main/packages/documents",
 	"repository": {
 		"type": "git",
-		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"url": "https://github.com/ponado-org/ponado-packages.git",
 		"directory": "packages/documents"
 	},
 	"sideEffects": false,
@@ -89,7 +89,7 @@
 		"vitest": "^1.6.1",
 		"xlsx-write-stream": "^1.0.3"
 	},
-	"publishConfig": {
-		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	"bugs": {
+		"url": "https://github.com/ponado-org/ponado-packages/issues"
 	}
 }

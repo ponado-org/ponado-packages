@@ -1,4 +1,4 @@
-# @ponado/utils
+# @ponado-org/utils
 
 Zero-dependency, browser-safe utilities. One package, one version, subpath
 imports. There is no root export on purpose: importing a subpath is the only
@@ -17,7 +17,7 @@ No runtime dependencies. Works in Node 20+, browsers, and edge runtimes
 (`/sse/server` uses Web Streams, not `node:stream`).
 
 ```bash
-pnpm add @ponado/utils
+pnpm add @ponado-org/utils
 ```
 
 ## `/date`
@@ -29,7 +29,7 @@ import {
 	getDifferenceInDays,
 	formatDaysDifference,
 	getDaysUntilAnniversary
-} from '@ponado/utils/date';
+} from '@ponado-org/utils/date';
 
 calculateAge(new Date('1990-05-15')); // full years, UTC-safe
 getVerbalDate(new Date(2024, 4, 9)); // "2024 m. gegužės 9 d."
@@ -51,7 +51,7 @@ import {
 	isDayOff,
 	sanitizeFilename,
 	normalizeLithuanianLetters
-} from '@ponado/utils/lt';
+} from '@ponado-org/utils/lt';
 
 declineFullName('Jonas Petraitis', 'kilmininkas');
 getVerbalAmount(1234.56); // "tūkstantis du šimtai trisdešimt keturi eurai 56 ct"
@@ -66,7 +66,7 @@ Cases: `vardininkas`, `kilmininkas`, `naudininkas`, `galininkas`, `inagininkas`,
 ## `/shortcuts`
 
 ```ts
-import { handleShortcuts, KeyCode, shortcutLabel } from '@ponado/utils/shortcuts';
+import { handleShortcuts, KeyCode, shortcutLabel } from '@ponado-org/utils/shortcuts';
 
 handleShortcuts(event, [{ code: KeyCode.S, mod: true, handler: () => save() }]);
 
@@ -82,7 +82,7 @@ configured otherwise.
 Emit facts ("what happened"); handlers decide recipients, content and transport.
 
 ```ts
-import { NotificationBus } from '@ponado/utils/notifications';
+import { NotificationBus } from '@ponado-org/utils/notifications';
 
 type AppEvent =
 	| { type: 'approval.status_changed'; approvalId: number; status: 'valid' | 'invalid' }
@@ -109,7 +109,7 @@ Client uses `fetch` + `ReadableStream`, so it supports POST bodies, headers and
 auth cookies that `EventSource` can't.
 
 ```ts
-import { SseClient } from '@ponado/utils/sse';
+import { SseClient } from '@ponado-org/utils/sse';
 
 type MyEvents = {
 	progress: { done: number; total: number };
@@ -133,7 +133,7 @@ Pass `{ reconnect: true }` to retry transport errors with exponential backoff.
 Server helpers:
 
 ```ts
-import { createSseChannel, SSE_HEADERS } from '@ponado/utils/sse/server';
+import { createSseChannel, SSE_HEADERS } from '@ponado-org/utils/sse/server';
 
 export const GET = () => {
 	const channel = createSseChannel<MyEvents>();

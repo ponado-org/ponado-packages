@@ -15,7 +15,7 @@ export type S3SignedUrlResult =
 
 /**
  * The slice of an S3 client the backend needs. Structurally compatible with
- * `createS3Client` from `@ponado/s3` and with app-local wrappers, so this
+ * `createS3Client` from `@ponado-org/integrations/s3` and with app-local wrappers, so this
  * package carries no AWS SDK dependency.
  */
 export interface S3StorageClient {

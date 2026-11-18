@@ -1,4 +1,4 @@
-# @ponado/documents
+# @ponado-org/documents
 
 Document tooling split by format, so an app that only writes XLSX never installs
 `pdf-lib` (23 MB) or the DOCX stack. Every format library is an optional peer
@@ -15,7 +15,7 @@ dependency of this package.
 
 ```bash
 # XLSX only
-pnpm add @ponado/documents xlsx-write-stream
+pnpm add @ponado-org/documents xlsx-write-stream
 ```
 
 System binaries are needed only for the conversions that shell out:
@@ -27,7 +27,7 @@ System binaries are needed only for the conversions that shell out:
 ## `/shared`
 
 ```ts
-import { escapeRegexLiteral, substituteTemplate, tag } from '@ponado/documents/shared';
+import { escapeRegexLiteral, substituteTemplate, tag } from '@ponado-org/documents/shared';
 
 escapeRegexLiteral('price$[test]'); // "price\\$\\[test\\]"
 substituteTemplate({
@@ -48,7 +48,7 @@ import {
 	renderDocxTemplate,
 	mergeDocxBuffers,
 	docxToPdf
-} from '@ponado/documents/docx';
+} from '@ponado-org/documents/docx';
 
 const filled = renderDocxTemplate({
 	docxTemplate: buffer,
@@ -67,7 +67,7 @@ import {
 	splitPdfByPage,
 	convertSvgToPdf,
 	mergeSvgsIntoPdf
-} from '@ponado/documents/pdf';
+} from '@ponado-org/documents/pdf';
 
 const merged = await mergePdfs([pdf1, pdf2]);
 const pages = await splitPdfByPage(pdfBuffer);
@@ -81,7 +81,7 @@ overload the machine and the package needs no queue dependency.
 ## `/xlsx`
 
 ```ts
-import { objectsToXlsxBuffer, rowsToXlsxBuffer } from '@ponado/documents/xlsx';
+import { objectsToXlsxBuffer, rowsToXlsxBuffer } from '@ponado-org/documents/xlsx';
 
 const fromObjects = await objectsToXlsxBuffer([{ name: 'Jonas', age: 30 }]);
 const fromRows = await rowsToXlsxBuffer([['Jonas', 30]]);
@@ -95,7 +95,7 @@ import {
 	renderTypstTemplateWithData,
 	substituteTypstTemplate,
 	escapeTypstString
-} from '@ponado/documents/typst';
+} from '@ponado-org/documents/typst';
 
 const pdf = await convertTypstToPdf(template, { inputs: { name: 'Jonas' } });
 ```

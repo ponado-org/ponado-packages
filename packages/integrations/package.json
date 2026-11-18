@@ -1,14 +1,14 @@
 {
-	"name": "@ponado/integrations",
+	"name": "@ponado-org/integrations",
 	"type": "module",
 	"version": "0.1.0",
 	"description": "Node integrations with zero installed weight: S3, storage, SES email, Google Calendar and StockX",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
-	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/integrations",
+	"homepage": "https://github.com/ponado-org/ponado-packages/tree/main/packages/integrations",
 	"repository": {
 		"type": "git",
-		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"url": "https://github.com/ponado-org/ponado-packages.git",
 		"directory": "packages/integrations"
 	},
 	"sideEffects": false,
@@ -95,7 +95,7 @@
 		"typescript": "^6.0.3",
 		"vitest": "^1.6.1"
 	},
-	"publishConfig": {
-		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	"bugs": {
+		"url": "https://github.com/ponado-org/ponado-packages/issues"
 	}
 }

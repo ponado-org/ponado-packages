@@ -1,4 +1,4 @@
-# @ponado/integrations
+# @ponado-org/integrations
 
 Node integrations in one package with subpath exports. The package itself
 installs **nothing**; each subpath's SDK is an optional peer dependency, so an
@@ -13,7 +13,7 @@ app only downloads what it uses.
 | `/google-calendar` | `@googleapis/calendar`, `google-auth-library`                      |
 
 ```bash
-pnpm add @ponado/integrations @aws-sdk/client-s3 @aws-sdk/s3-request-presigner file-type
+pnpm add @ponado-org/integrations @aws-sdk/client-s3 @aws-sdk/s3-request-presigner file-type
 ```
 
 If you import a subpath whose peer isn't installed, the import fails immediately
@@ -25,7 +25,7 @@ AWS S3 (and S3-compatible, e.g. MinIO) wrapper with file-type detection,
 signed URLs, batch deletes and bucket cloning.
 
 ```ts
-import { createS3Client } from '@ponado/integrations/s3';
+import { createS3Client } from '@ponado-org/integrations/s3';
 
 const s3 = createS3Client({
 	region: 'us-east-1',
@@ -48,7 +48,11 @@ Provider-agnostic storage contract plus a local filesystem backend and an
 S3-compatible backend. The package owns bytes; your app owns policy.
 
 ```ts
-import { createLocalBackend, createS3Backend, createStorage } from '@ponado/integrations/storage';
+import {
+	createLocalBackend,
+	createS3Backend,
+	createStorage
+} from '@ponado-org/integrations/storage';
 
 const storage = createStorage({
 	defaultProvider: 'local',
@@ -75,7 +79,7 @@ Amazon SES client on nodemailer's SES transport. Dry-run mode, injected logger,
 optional `onSent` hook. `sendEmail()` never throws.
 
 ```ts
-import { createEmailClient } from '@ponado/integrations/email';
+import { createEmailClient } from '@ponado-org/integrations/email';
 
 const email = createEmailClient({
 	accessKeyId: process.env.SES_ACCESS_KEY!,
@@ -104,7 +108,10 @@ without touching SES.
 Service-account Google Calendar client.
 
 ```ts
-import { consoleLogger, createGoogleCalendarClient } from '@ponado/integrations/google-calendar';
+import {
+	consoleLogger,
+	createGoogleCalendarClient
+} from '@ponado-org/integrations/google-calendar';
 
 const calendar = createGoogleCalendarClient({
 	serviceAccountJson: process.env.GOOGLE_SERVICE_ACCOUNT_JSON!,
