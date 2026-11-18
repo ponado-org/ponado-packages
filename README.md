@@ -86,6 +86,9 @@ The previous one-package-per-feature names were removed. Imports map 1:1:
 
 ## Development
 
+Requires **Node 22.11+** and **pnpm 10** (CI uses Node 24; the local
+`packageManager` pin is pnpm 10.34.9).
+
 ```bash
 pnpm install
 pnpm check      # format + lint + typecheck + test + build + packaging check
