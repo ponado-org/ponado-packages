@@ -1,0 +1,66 @@
+{
+	"name": "@ponado/utils",
+	"type": "module",
+	"version": "0.1.0",
+	"description": "Zero-dependency, browser-safe utilities: dates, Lithuanian language, shortcuts, notifications and SSE",
+	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
+	"license": "MIT",
+	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/utils",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"directory": "packages/utils"
+	},
+	"sideEffects": false,
+	"exports": {
+		"./date": {
+			"types": "./dist/date.d.mts",
+			"import": "./dist/date.mjs"
+		},
+		"./lt": {
+			"types": "./dist/lt.d.mts",
+			"import": "./dist/lt.mjs"
+		},
+		"./notifications": {
+			"types": "./dist/notifications.d.mts",
+			"import": "./dist/notifications.mjs"
+		},
+		"./shortcuts": {
+			"types": "./dist/shortcuts.d.mts",
+			"import": "./dist/shortcuts.mjs"
+		},
+		"./sse": {
+			"types": "./dist/sse.d.mts",
+			"import": "./dist/sse.mjs"
+		},
+		"./sse/server": {
+			"types": "./dist/sse/server.d.mts",
+			"import": "./dist/sse/server.mjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"prepack": "pnpm run build"
+	},
+	"devDependencies": {
+		"@types/node": "^20.19.41",
+		"tsdown": "^0.21.10",
+		"typescript": "^6.0.3",
+		"vitest": "^1.6.1"
+	},
+	"publishConfig": {
+		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	}
+}

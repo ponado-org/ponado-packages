@@ -18,4 +18,6 @@ for (const { file, renames } of results) {
 	const label = renames.map((r) => `${r.from}→${r.to}`).join(', ');
 	console.log(`${dry ? 'would fix' : 'fixed'} ${file}: ${label || '(import paths only)'}`);
 }
-console.log(`${dry ? 'dry run: ' : ''}${results.length} file(s) ${dry ? 'would change' : 'changed'}`);
+console.log(
+	`${dry ? 'dry run: ' : ''}${results.length} file(s) ${dry ? 'would change' : 'changed'}`
+);

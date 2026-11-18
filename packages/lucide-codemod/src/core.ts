@@ -293,7 +293,6 @@ function renameSvelte(code: string, map: Map<string, string>): string {
 			const close = findMatchingBrace(code, i);
 			if (close === -1) {
 				out += code.slice(i);
-				i = code.length;
 				break;
 			}
 			out += '{' + renameCode(code.slice(i + 1, close), map) + '}';

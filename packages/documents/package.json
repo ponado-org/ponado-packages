@@ -1,0 +1,95 @@
+{
+	"name": "@ponado/documents",
+	"type": "module",
+	"version": "0.1.0",
+	"description": "Document tooling with per-format subpaths: DOCX, PDF, XLSX and Typst",
+	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
+	"license": "MIT",
+	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/documents",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"directory": "packages/documents"
+	},
+	"sideEffects": false,
+	"exports": {
+		"./cli": {
+			"types": "./dist/cli.d.mts",
+			"import": "./dist/cli.mjs"
+		},
+		"./docx": {
+			"types": "./dist/docx.d.mts",
+			"import": "./dist/docx.mjs"
+		},
+		"./pdf": {
+			"types": "./dist/pdf.d.mts",
+			"import": "./dist/pdf.mjs"
+		},
+		"./shared": {
+			"types": "./dist/shared.d.mts",
+			"import": "./dist/shared.mjs"
+		},
+		"./typst": {
+			"types": "./dist/typst.d.mts",
+			"import": "./dist/typst.mjs"
+		},
+		"./xlsx": {
+			"types": "./dist/xlsx.d.mts",
+			"import": "./dist/xlsx.mjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"prepack": "pnpm run build"
+	},
+	"peerDependencies": {
+		"docx-merger": "^1.2.2",
+		"docxtemplater": "^3.68.7",
+		"pdf-lib": "^1.17.1",
+		"pizzip": "^3.2.0",
+		"xlsx-write-stream": "^1.0.3"
+	},
+	"peerDependenciesMeta": {
+		"docx-merger": {
+			"optional": true
+		},
+		"docxtemplater": {
+			"optional": true
+		},
+		"pdf-lib": {
+			"optional": true
+		},
+		"pizzip": {
+			"optional": true
+		},
+		"xlsx-write-stream": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^20.19.41",
+		"docx-merger": "^1.2.2",
+		"docxtemplater": "^3.68.7",
+		"pdf-lib": "^1.17.1",
+		"pizzip": "^3.2.0",
+		"tsdown": "^0.21.10",
+		"typescript": "^6.0.3",
+		"vitest": "^1.6.1",
+		"xlsx-write-stream": "^1.0.3"
+	},
+	"publishConfig": {
+		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	}
+}

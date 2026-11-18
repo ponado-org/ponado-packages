@@ -128,9 +128,9 @@ describe('expandVersionTag', () => {
 	});
 
 	it('requires a build number for {build}', () => {
-		expect(() => expandVersionTag('v{version}-rc.{build}', { ...context, build: undefined })).toThrow(
-			/BUILD_NUMBER/
-		);
+		expect(() =>
+			expandVersionTag('v{version}-rc.{build}', { ...context, build: undefined })
+		).toThrow(/BUILD_NUMBER/);
 	});
 
 	it('rejects tags Docker would not accept', () => {

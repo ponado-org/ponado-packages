@@ -1,0 +1,101 @@
+{
+	"name": "@ponado/integrations",
+	"type": "module",
+	"version": "0.1.0",
+	"description": "Node integrations with zero installed weight: S3, storage, SES email, Google Calendar and StockX",
+	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
+	"license": "MIT",
+	"homepage": "https://git.ponado.lt/ponado/ponado-packages/tree/main/packages/integrations",
+	"repository": {
+		"type": "git",
+		"url": "ssh://git@git.ponado.lt:3501/ponado/ponado-packages.git",
+		"directory": "packages/integrations"
+	},
+	"sideEffects": false,
+	"exports": {
+		"./email": {
+			"types": "./dist/email.d.mts",
+			"import": "./dist/email.mjs"
+		},
+		"./google-calendar": {
+			"types": "./dist/google-calendar.d.mts",
+			"import": "./dist/google-calendar.mjs"
+		},
+		"./s3": {
+			"types": "./dist/s3.d.mts",
+			"import": "./dist/s3.mjs"
+		},
+		"./stockx": {
+			"types": "./dist/stockx.d.mts",
+			"import": "./dist/stockx.mjs"
+		},
+		"./storage": {
+			"types": "./dist/storage.d.mts",
+			"import": "./dist/storage.mjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"prepack": "pnpm run build"
+	},
+	"peerDependencies": {
+		"@aws-sdk/client-s3": "^3.1045.0",
+		"@aws-sdk/client-sesv2": "^3.1146.0",
+		"@aws-sdk/s3-request-presigner": "^3.1045.0",
+		"@googleapis/calendar": "^20.1.0",
+		"file-type": "^22.0.1",
+		"google-auth-library": "^11.1.0",
+		"nodemailer": "^10.0.15"
+	},
+	"peerDependenciesMeta": {
+		"@aws-sdk/client-s3": {
+			"optional": true
+		},
+		"@aws-sdk/client-sesv2": {
+			"optional": true
+		},
+		"@aws-sdk/s3-request-presigner": {
+			"optional": true
+		},
+		"@googleapis/calendar": {
+			"optional": true
+		},
+		"file-type": {
+			"optional": true
+		},
+		"google-auth-library": {
+			"optional": true
+		},
+		"nodemailer": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@aws-sdk/client-s3": "^3.1045.0",
+		"@aws-sdk/client-sesv2": "^3.1146.0",
+		"@aws-sdk/s3-request-presigner": "^3.1045.0",
+		"@googleapis/calendar": "^20.1.0",
+		"@types/node": "^20.19.41",
+		"file-type": "^22.0.1",
+		"google-auth-library": "^11.1.0",
+		"nodemailer": "^10.0.15",
+		"tsdown": "^0.21.10",
+		"typescript": "^6.0.3",
+		"vitest": "^1.6.1"
+	},
+	"publishConfig": {
+		"registry": "https://git.ponado.lt/api/packages/ponado/npm/"
+	}
+}

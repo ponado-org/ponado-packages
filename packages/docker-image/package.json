@@ -15,7 +15,10 @@
 		"ponado-docker-image": "./dist/cli.mjs"
 	},
 	"exports": {
-		".": "./dist/index.mjs",
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs"
+		},
 		"./package.json": "./package.json"
 	},
 	"files": [
@@ -30,12 +33,10 @@
 		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
 		"clean": "rm -rf dist",
-		"release:patch": "bumpp --release patch --yes --commit=false --tag=false && pnpm publish --no-git-checks",
-		"prepublishOnly": "pnpm run build"
+		"prepack": "pnpm run build"
 	},
 	"devDependencies": {
-		"@types/node": "^20.19.40",
-		"bumpp": "^11.1.0",
+		"@types/node": "^20.19.41",
 		"tsdown": "^0.21.10",
 		"typescript": "^6.0.3",
 		"vitest": "^1.6.1"

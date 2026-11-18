@@ -1,12 +1,7 @@
 import { createInterface } from 'node:readline/promises';
 import { readPackageJson, readVersion, resolveConfig } from './config.js';
 import { readGitInfo } from './git.js';
-import {
-	computeTags,
-	envBuildNumber,
-	expandVersionTag,
-	variantSuffixFor
-} from './tags.js';
+import { computeTags, envBuildNumber, expandVersionTag, variantSuffixFor } from './tags.js';
 
 export interface PromptSession {
 	ask(question: string, fallback: string): Promise<string>;
