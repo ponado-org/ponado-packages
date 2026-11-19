@@ -1,7 +1,7 @@
 {
 	"name": "@ponado-org/documents",
 	"type": "module",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Document tooling with per-format subpaths: DOCX, PDF, XLSX and Typst",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",
