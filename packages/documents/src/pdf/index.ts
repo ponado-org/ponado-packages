@@ -1,82 +1,49 @@
-import { PDFDocument } from 'pdf-lib';
-import { executeCliWithFiles } from '../cli/index.js';
-import fs from 'node:fs/promises';
-
-export async function mergePdfs(pdfBuffers: Buffer[]): Promise<Buffer> {
-	const mergedPdf = await PDFDocument.create();
-
-	for (const pdfBytes of pdfBuffers) {
-		const pdf = await PDFDocument.load(pdfBytes);
-		const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-		copiedPages.forEach((page) => mergedPdf.addPage(page));
-	}
-
-	const mergedPdfBytes = await mergedPdf.save();
-	return Buffer.from(mergedPdfBytes);
-}
-
-export type SvgToPdfOptions = {
-	/** Convert text to outlines (default `true`). */
-	textToPaths?: boolean;
+export type PdfMergeOptions = {
+	/** Base URL of a Gotenberg instance, e.g. `http://gotenberg:3000`. */
+	url: string;
+	/** Request timeout in milliseconds (default 60s). */
+	timeoutMs?: number;
 };
 
-let pdfQueue: Promise<unknown> = Promise.resolve();
+const DEFAULT_TIMEOUT_MS = 60_000;
 
-function enqueuePdfJob<T>(job: () => Promise<T>): Promise<T> {
-	const run = pdfQueue.then(job, job);
-	pdfQueue = run.then(
-		() => undefined,
-		() => undefined
-	);
-	return run;
-}
-
-export async function convertSvgToPdf(svg: string, options?: SvgToPdfOptions): Promise<Buffer> {
-	return executeCliWithFiles<string, Buffer>('inkscape', svg, {
-		inputExt: 'svg',
-		outputExt: 'pdf',
-		env: { INKSCAPE_NO_DBUS: '1' },
-
-		buildArgs: (inputFile, outputFile) => {
-			const args = [inputFile, `--export-filename=${outputFile}`, '--export-type=pdf'];
-
-			// Default to converting text to paths unless explicitly disabled
-			if (options?.textToPaths !== false) {
-				args.push('--export-text-to-path');
-			}
-
-			return args;
-		},
-
-		processOutput: async (outputFile) => {
-			return await fs.readFile(outputFile);
-		}
-	});
-}
-
-export async function mergeSvgsIntoPdf(svgs: string[]): Promise<Buffer> {
-	const pdfBuffers = await Promise.all(
-		svgs.map((svg) => enqueuePdfJob(() => convertSvgToPdf(svg)))
-	);
-
-	const mergedPdfBuffer = await mergePdfs(pdfBuffers);
-
-	return mergedPdfBuffer;
-}
-
-// Function to split PDF into single-page PDFs
-export async function splitPdfByPage(pdfBuffer: Buffer) {
-	const pdfDoc = await PDFDocument.load(pdfBuffer);
-	const pageCount = pdfDoc.getPageCount();
-	const outputPdfs: Buffer[] = [];
-
-	for (let i = 0; i < pageCount; i++) {
-		const newPdf = await PDFDocument.create();
-		const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
-		newPdf.addPage(copiedPage);
-		const pdfBytes = await newPdf.save();
-		outputPdfs.push(Buffer.from(pdfBytes));
+/**
+ * Merges PDFs through a Gotenberg instance.
+ *
+ * This is the lightweight default: no PDF engine is bundled. The service owns
+ * the merge and the app only ships a fetch call. Use `@ponado-org/documents/pdf-local`
+ * when no Gotenberg sidecar is available.
+ *
+ * Files are named `0000.pdf`, `0001.pdf`, … because Gotenberg combines inputs
+ * in alphanumeric filename order, not upload order.
+ */
+export async function mergePdfs(
+	pdfs: readonly Uint8Array[],
+	{ url, timeoutMs = DEFAULT_TIMEOUT_MS }: PdfMergeOptions
+): Promise<Buffer> {
+	if (pdfs.length === 0) {
+		throw new Error('mergePdfs: at least one PDF is required');
+	}
+	if (pdfs.length === 1) {
+		return Buffer.from(pdfs[0]);
 	}
 
-	return outputPdfs;
+	const form = new FormData();
+	pdfs.forEach((pdf, index) => {
+		const name = `${String(index).padStart(4, '0')}.pdf`;
+		form.append('files', new Blob([pdf], { type: 'application/pdf' }), name);
+	});
+
+	const response = await fetch(`${url.replace(/\/+$/, '')}/forms/pdfengines/merge`, {
+		method: 'POST',
+		body: form,
+		signal: AbortSignal.timeout(timeoutMs)
+	});
+
+	if (!response.ok) {
+		const detail = await response.text().catch(() => '');
+		throw new Error(`Gotenberg merge failed (${response.status}): ${detail.slice(0, 500)}`);
+	}
+
+	return Buffer.from(await response.arrayBuffer());
 }

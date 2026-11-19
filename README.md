@@ -10,7 +10,7 @@ package and imports only the feature it needs.
 | ------------------------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------- |
 | [@ponado-org/utils](./packages/utils)                   | `date`, `lt`, `shortcuts`, `notifications`, `sse`, `sse/server` | none                                           |
 | [@ponado-org/integrations](./packages/integrations)     | `s3`, `storage`, `email`, `google-calendar`, `stockx`           | only the SDKs for the subpaths you import      |
-| [@ponado-org/documents](./packages/documents)           | `docx`, `pdf`, `xlsx`, `typst`, `shared`, `cli`                 | only the libraries for the subpaths you import |
+| [@ponado-org/documents](./packages/documents)           | `docx`, `pdf`, `pdf-local`, `xlsx`, `typst`, `shared`, `cli`    | only the libraries for the subpaths you import |
 | [@ponado-org/docker-image](./packages/docker-image)     | CLI (`ponado-docker-image`)                                     | none                                           |
 | [@ponado-org/lucide-codemod](./packages/lucide-codemod) | CLI (`lucide-codemod`)                                          | none                                           |
 
@@ -20,7 +20,8 @@ so they are only installed when an app actually uses that subpath:
 ```bash
 pnpm add @ponado-org/documents xlsx-write-stream   # XLSX only: ~280 KB
 pnpm add @ponado-org/documents docxtemplater pizzip docx-merger   # DOCX only: ~4 MB
-pnpm add @ponado-org/documents pdf-lib   # PDF only: ~23 MB
+# /pdf uses a Gotenberg sidecar and installs nothing; /pdf-local needs pdf-lib (~23 MB)
+pnpm add @ponado-org/documents pdf-lib   # only for /pdf-local
 ```
 
 ## Registry
@@ -78,7 +79,7 @@ The previous one-package-per-feature names were removed. Imports map 1:1:
 | `@ponado/stockx-client`          | `@ponado-org/integrations/stockx`          | –                                                                  |
 | `@ponado/document-utils`         | `@ponado-org/documents/shared`             | –                                                                  |
 | `@ponado/document-utils/server`  | `@ponado-org/documents/docx`               | `docxtemplater`, `pizzip`, `docx-merger`                           |
-| `@ponado/document-utils/server`  | `@ponado-org/documents/pdf`                | `pdf-lib`                                                          |
+| `@ponado/document-utils/server`  | `@ponado-org/documents/pdf`                | Gotenberg sidecar, or `/pdf-local` + `pdf-lib`                     |
 | `@ponado/document-utils/server`  | `@ponado-org/documents/xlsx`               | `xlsx-write-stream`                                                |
 | `@ponado/document-utils/server`  | `@ponado-org/documents/typst`              | –                                                                  |
 

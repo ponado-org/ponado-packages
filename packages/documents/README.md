@@ -4,23 +4,28 @@ Document tooling split by format, so an app that only writes XLSX never installs
 `pdf-lib` (23 MB) or the DOCX stack. Every format library is an optional peer
 dependency of this package.
 
-| Subpath   | Install alongside                        | Weight  |
-| --------- | ---------------------------------------- | ------- |
-| `/shared` | –                                        | –       |
-| `/typst`  | – (uses the ponado-typst HTTP service)   | –       |
-| `/cli`    | –                                        | –       |
-| `/xlsx`   | `xlsx-write-stream`                      | ~280 KB |
-| `/docx`   | `docxtemplater`, `pizzip`, `docx-merger` | ~4 MB   |
-| `/pdf`    | `pdf-lib`                                | ~23 MB  |
+| Subpath      | Install alongside                        | Weight  |
+| ------------ | ---------------------------------------- | ------- |
+| `/shared`    | –                                        | –       |
+| `/typst`     | – (uses the ponado-typst HTTP service)   | –       |
+| `/cli`       | –                                        | –       |
+| `/xlsx`      | `xlsx-write-stream`                      | ~280 KB |
+| `/docx`      | `docxtemplater`, `pizzip`, `docx-merger` | ~4 MB   |
+| `/pdf`       | – (uses a Gotenberg sidecar)             | –       |
+| `/pdf-local` | `pdf-lib`                                | ~23 MB  |
 
 ```bash
 # XLSX only
 pnpm add @ponado-org/documents xlsx-write-stream
+
+# local PDF engine, only when no Gotenberg is available
+pnpm add @ponado-org/documents pdf-lib
 ```
 
-System binaries are needed only for the conversions that shell out:
+System binaries and services are needed only for the operations that use them:
 
-- `/pdf` → `inkscape` for `convertSvgToPdf` / `mergeSvgsIntoPdf`
+- `/pdf` → a Gotenberg instance (`POST /forms/pdfengines/merge`)
+- `/pdf-local` → `inkscape` for `convertSvgToPdf` / `mergeSvgsIntoPdf`
 - `/docx` → `libreoffice` for `docxToPdf`
 - `/typst` → the `ponado-typst` service (`TYPST_URL`)
 
@@ -61,13 +66,34 @@ const pdf = await docxToPdf(buffer); // requires libreoffice
 
 ## `/pdf`
 
+Merges PDFs through a Gotenberg sidecar. No PDF engine is bundled, so this is
+the subpath to use in server deployments that already run Gotenberg.
+
+```ts
+import { mergePdfs } from '@ponado-org/documents/pdf';
+
+const merged = await mergePdfs([pdf1, pdf2], {
+	url: 'http://gotenberg:3000',
+	timeoutMs: 60_000 // optional
+});
+```
+
+Inputs are named `0000.pdf`, `0001.pdf`, … because Gotenberg merges in
+alphanumeric filename order, not upload order. A single input is returned
+as-is without a request.
+
+## `/pdf-local`
+
+The `pdf-lib` implementation for environments without a Gotenberg sidecar.
+It supports merging, splitting and the Inkscape-based SVG helpers.
+
 ```ts
 import {
 	mergePdfs,
 	splitPdfByPage,
 	convertSvgToPdf,
 	mergeSvgsIntoPdf
-} from '@ponado-org/documents/pdf';
+} from '@ponado-org/documents/pdf-local';
 
 const merged = await mergePdfs([pdf1, pdf2]);
 const pages = await splitPdfByPage(pdfBuffer);

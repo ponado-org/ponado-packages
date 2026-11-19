@@ -25,6 +25,10 @@
 			"types": "./dist/pdf.d.mts",
 			"import": "./dist/pdf.mjs"
 		},
+		"./pdf-local": {
+			"types": "./dist/pdf-local.d.mts",
+			"import": "./dist/pdf-local.mjs"
+		},
 		"./shared": {
 			"types": "./dist/shared.d.mts",
 			"import": "./dist/shared.mjs"

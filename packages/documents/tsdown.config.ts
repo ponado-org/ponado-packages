@@ -5,6 +5,7 @@ export default defineConfig({
 		cli: 'src/cli/index.ts',
 		docx: 'src/docx/index.ts',
 		pdf: 'src/pdf/index.ts',
+		'pdf-local': 'src/pdf-local/index.ts',
 		shared: 'src/shared/index.ts',
 		typst: 'src/typst/index.ts',
 		xlsx: 'src/xlsx/index.ts'
