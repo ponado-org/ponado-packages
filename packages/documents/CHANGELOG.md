@@ -1,5 +1,12 @@
 # @ponado-org/documents
 
+## 0.4.0
+
+### Minor Changes
+
+- 0173295: Remove `/pdf-local` and the pdf-lib dependency. PDF merging is Gotenberg-only;
+  the local engine was unused and kept 23 MB in the development install.
+
 ## 0.3.0
 
 ### Minor Changes
