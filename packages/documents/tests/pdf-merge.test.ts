@@ -9,7 +9,7 @@ describe('mergePdfs', () => {
 	it('posts zero-padded files to Gotenberg and returns the merged bytes', async () => {
 		const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
 			const requested = url instanceof Request ? url.url : url.toString();
-			expect(requested).toBe('http://gotenberg:3000/forms/pdfengines/merge');
+			expect(requested).toBe('http://gotenberg:3000/forms/pdf/merge');
 			const body = init?.body as FormData;
 			const files = body.getAll('files') as File[];
 			expect(files.map((file) => file.name)).toEqual(['0000.pdf', '0001.pdf']);
@@ -43,6 +43,6 @@ describe('mergePdfs', () => {
 
 		await expect(
 			mergePdfs([new Uint8Array([1]), new Uint8Array([2])], { url: 'http://gotenberg:3000' })
-		).rejects.toThrow('Gotenberg merge failed (400): bad input');
+		).rejects.toThrow('Gotenberg request to /forms/pdf/merge failed (400): bad input');
 	});
 });

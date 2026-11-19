@@ -21,7 +21,7 @@ install only the ones you import:
 ```bash
 pnpm add @ponado-org/documents xlsx-write-stream   # XLSX only: ~280 KB
 pnpm add @ponado-org/documents docxtemplater pizzip docx-merger   # DOCX only: ~4 MB
-# /pdf uses a Gotenberg sidecar and installs nothing
+# /pdf uses a Gotenberg 9 sidecar and installs nothing
 ```
 
 This manual step exists because GitHub Packages drops `peerDependenciesMeta`
