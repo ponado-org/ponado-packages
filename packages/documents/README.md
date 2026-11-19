@@ -1,8 +1,8 @@
 # @ponado-org/documents
 
 Document tooling split by format, so an app that only writes XLSX never installs
-`pdf-lib` (23 MB) or the DOCX stack. Every format library is an optional peer
-dependency of this package.
+`pdf-lib` (23 MB) or the DOCX stack. Format libraries are listed under
+`subpathDependencies` and must be installed explicitly for the subpaths you use.
 
 | Subpath      | Install alongside                        | Weight  |
 | ------------ | ---------------------------------------- | ------- |

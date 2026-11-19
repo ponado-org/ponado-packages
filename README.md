@@ -14,8 +14,9 @@ package and imports only the feature it needs.
 | [@ponado-org/docker-image](./packages/docker-image)     | CLI (`ponado-docker-image`)                                     | none                                           |
 | [@ponado-org/lucide-codemod](./packages/lucide-codemod) | CLI (`lucide-codemod`)                                          | none                                           |
 
-Subpaths keep bundles small, and heavy SDKs are **optional peer dependencies**,
-so they are only installed when an app actually uses that subpath:
+Subpaths keep bundles small, and heavy SDKs are **not installed automatically**.
+Each package lists the libraries for its subpaths in `subpathDependencies`;
+install only the ones you import:
 
 ```bash
 pnpm add @ponado-org/documents xlsx-write-stream   # XLSX only: ~280 KB
@@ -23,6 +24,9 @@ pnpm add @ponado-org/documents docxtemplater pizzip docx-merger   # DOCX only: ~
 # /pdf uses a Gotenberg sidecar and installs nothing; /pdf-local needs pdf-lib (~23 MB)
 pnpm add @ponado-org/documents pdf-lib   # only for /pdf-local
 ```
+
+This manual step exists because GitHub Packages drops `peerDependenciesMeta`
+from its metadata, which made pnpm install every “optional” peer.
 
 ## Registry
 

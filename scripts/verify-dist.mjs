@@ -30,7 +30,8 @@ function declaredRuntimeDeps(pkg) {
 	return new Set([
 		...Object.keys(pkg.dependencies ?? {}),
 		...Object.keys(pkg.peerDependencies ?? {}),
-		...Object.keys(pkg.optionalDependencies ?? {})
+		...Object.keys(pkg.optionalDependencies ?? {}),
+		...Object.values(pkg.subpathDependencies ?? {}).flat()
 	]);
 }
 

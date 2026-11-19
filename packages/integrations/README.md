@@ -1,8 +1,8 @@
 # @ponado-org/integrations
 
 Node integrations in one package with subpath exports. The package itself
-installs **nothing**; each subpath's SDK is an optional peer dependency, so an
-app only downloads what it uses.
+installs **nothing**. Each subpath's SDK is listed under `subpathDependencies`
+and must be installed explicitly, so an app only downloads what it uses.
 
 | Subpath            | Install alongside                                                  |
 | ------------------ | ------------------------------------------------------------------ |
@@ -16,7 +16,7 @@ app only downloads what it uses.
 pnpm add @ponado-org/integrations @aws-sdk/client-s3 @aws-sdk/s3-request-presigner file-type
 ```
 
-If you import a subpath whose peer isn't installed, the import fails immediately
+If you import a subpath whose SDK isn't installed, the import fails immediately
 with a normal `ERR_MODULE_NOT_FOUND` for that SDK — nothing else is affected.
 
 ## `/s3`

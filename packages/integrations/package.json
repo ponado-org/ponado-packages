@@ -50,37 +50,20 @@
 		"clean": "rm -rf dist",
 		"prepack": "pnpm run build"
 	},
-	"peerDependencies": {
-		"@aws-sdk/client-s3": "^3.1045.0",
-		"@aws-sdk/client-sesv2": "^3.1146.0",
-		"@aws-sdk/s3-request-presigner": "^3.1045.0",
-		"@googleapis/calendar": "^20.1.0",
-		"file-type": "^22.0.1",
-		"google-auth-library": "^11.1.0",
-		"nodemailer": "^10.0.15"
-	},
-	"peerDependenciesMeta": {
-		"@aws-sdk/client-s3": {
-			"optional": true
-		},
-		"@aws-sdk/client-sesv2": {
-			"optional": true
-		},
-		"@aws-sdk/s3-request-presigner": {
-			"optional": true
-		},
-		"@googleapis/calendar": {
-			"optional": true
-		},
-		"file-type": {
-			"optional": true
-		},
-		"google-auth-library": {
-			"optional": true
-		},
-		"nodemailer": {
-			"optional": true
-		}
+	"subpathDependencies": {
+		"./email": [
+			"@aws-sdk/client-sesv2",
+			"nodemailer"
+		],
+		"./google-calendar": [
+			"@googleapis/calendar",
+			"google-auth-library"
+		],
+		"./s3": [
+			"@aws-sdk/client-s3",
+			"@aws-sdk/s3-request-presigner",
+			"file-type"
+		]
 	},
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.1045.0",

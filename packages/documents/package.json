@@ -58,29 +58,18 @@
 		"clean": "rm -rf dist",
 		"prepack": "pnpm run build"
 	},
-	"peerDependencies": {
-		"docx-merger": "^1.2.2",
-		"docxtemplater": "^3.68.7",
-		"pdf-lib": "^1.17.1",
-		"pizzip": "^3.2.0",
-		"xlsx-write-stream": "^1.0.3"
-	},
-	"peerDependenciesMeta": {
-		"docx-merger": {
-			"optional": true
-		},
-		"docxtemplater": {
-			"optional": true
-		},
-		"pdf-lib": {
-			"optional": true
-		},
-		"pizzip": {
-			"optional": true
-		},
-		"xlsx-write-stream": {
-			"optional": true
-		}
+	"subpathDependencies": {
+		"./docx": [
+			"docx-merger",
+			"docxtemplater",
+			"pizzip"
+		],
+		"./pdf-local": [
+			"pdf-lib"
+		],
+		"./xlsx": [
+			"xlsx-write-stream"
+		]
 	},
 	"devDependencies": {
 		"@types/node": "^20.19.41",
