@@ -18,7 +18,7 @@
 		"lint:pkg": "pnpm -r --filter './packages/*' exec publint --pack false",
 		"check:types": "pnpm -r --filter './packages/*' exec attw --pack . --profile esm-only",
 		"changeset": "changeset",
-		"version": "changeset version && pnpm install --lockfile-only",
+		"version-packages": "changeset version && pnpm install --lockfile-only",
 		"release": "pnpm check && changeset publish"
 	},
 	"devDependencies": {

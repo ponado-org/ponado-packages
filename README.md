@@ -129,7 +129,7 @@ Local equivalent:
 
 ```bash
 pnpm changeset          # describe the change; selects affected packages
-pnpm version            # bump versions + changelogs
+pnpm run version-packages  # bump versions + changelogs
 pnpm release            # check, build, publish changed packages
 ```
 
