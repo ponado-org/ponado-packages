@@ -19,8 +19,8 @@ Each package lists the libraries for its subpaths in `subpathDependencies`;
 install only the ones you import:
 
 ```bash
-pnpm add @ponado-org/documents xlsx-write-stream   # XLSX only: ~280 KB
-pnpm add @ponado-org/documents docxtemplater pizzip docx-merger   # DOCX only: ~4 MB
+pnpm add @ponado-org/documents   # XLSX + CSV: no extra dependencies
+pnpm add @ponado-org/documents docxtemplater pizzip   # DOCX only: ~2.3 MB
 # /pdf uses a Gotenberg 9 sidecar and installs nothing
 ```
 
@@ -81,9 +81,9 @@ The previous one-package-per-feature names were removed. Imports map 1:1:
 | `@ponado/google-calendar-client` | `@ponado-org/integrations/google-calendar` | `@googleapis/calendar`, `google-auth-library`                      |
 | `@ponado/stockx-client`          | `@ponado-org/integrations/stockx`          | –                                                                  |
 | `@ponado/document-utils`         | `@ponado-org/documents/shared`             | –                                                                  |
-| `@ponado/document-utils/server`  | `@ponado-org/documents/docx`               | `docxtemplater`, `pizzip`, `docx-merger`                           |
+| `@ponado/document-utils/server`  | `@ponado-org/documents/docx`               | `docxtemplater`, `pizzip`                                          |
 | `@ponado/document-utils/server`  | `@ponado-org/documents/pdf`                | Gotenberg sidecar                                                  |
-| `@ponado/document-utils/server`  | `@ponado-org/documents/xlsx`               | `xlsx-write-stream`                                                |
+| `@ponado/document-utils/server`  | `@ponado-org/documents/xlsx`               | –                                                                  |
 | `@ponado/document-utils/server`  | `@ponado-org/documents/typst`              | –                                                                  |
 
 `executeCliWithFiles` / `isInPath` moved to `@ponado-org/documents/cli`.

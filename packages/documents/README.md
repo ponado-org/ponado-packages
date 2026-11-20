@@ -4,18 +4,18 @@ Document tooling split by format, so an app that only writes XLSX never installs
 `pdf-lib` (23 MB) or the DOCX stack. Format libraries are listed under
 `subpathDependencies` and must be installed explicitly for the subpaths you use.
 
-| Subpath   | Install alongside                        | Weight  |
-| --------- | ---------------------------------------- | ------- |
-| `/shared` | –                                        | –       |
-| `/typst`  | – (uses the ponado-typst HTTP service)   | –       |
-| `/cli`    | –                                        | –       |
-| `/xlsx`   | `xlsx-write-stream`                      | ~280 KB |
-| `/docx`   | `docxtemplater`, `pizzip`, `docx-merger` | ~4 MB   |
-| `/pdf`    | – (uses a Gotenberg 9 sidecar)           | –       |
+| Subpath   | Install alongside                      | Weight  |
+| --------- | -------------------------------------- | ------- |
+| `/shared` | –                                      | –       |
+| `/typst`  | – (uses the ponado-typst HTTP service) | –       |
+| `/cli`    | –                                      | –       |
+| `/xlsx`   | –                                      | –       |
+| `/docx`   | `docxtemplater`, `pizzip`              | ~2.3 MB |
+| `/pdf`    | – (uses a Gotenberg 9 sidecar)         | –       |
 
 ```bash
-# XLSX only
-pnpm add @ponado-org/documents xlsx-write-stream
+# XLSX, CSV and TSV need no extra packages
+pnpm add @ponado-org/documents
 ```
 
 System binaries and services are needed only for the operations that use them:
@@ -58,6 +58,12 @@ const text = docxToString(buffer);
 const merged = await mergeDocxBuffers([docx1, docx2]);
 const pdf = await docxToPdf(buffer); // requires libreoffice
 ```
+
+`mergeDocxBuffers` is a fast body concatenation for documents rendered from the
+**same DOCX template** (it keeps the first document's styles, numbering,
+relationships, headers and footers and rejects documents whose shared parts
+differ). To combine unrelated documents, merge them as PDFs through Gotenberg
+instead.
 
 ## `/pdf`
 
@@ -146,12 +152,40 @@ input is returned as-is without a request.
 
 ## `/xlsx`
 
-```ts
-import { objectsToXlsxBuffer, rowsToXlsxBuffer } from '@ponado-org/documents/xlsx';
+Spreadsheet exports: XLSX (single sheet), RFC 4180 CSV and TSV for clipboard
+pasting. All three are dependency-free.
 
-const fromObjects = await objectsToXlsxBuffer([{ name: 'Jonas', age: 30 }]);
+```ts
+import {
+	objectsToXlsxBuffer,
+	rowsToXlsxBuffer,
+	objectsToCsv,
+	objectsToTsv
+} from '@ponado-org/documents/xlsx';
+
+const rows = [
+	{ name: 'Jonas', age: 30, joinedAt: new Date('2024-01-02') },
+	{ name: 'Ona', age: 28, joinedAt: new Date('2023-06-15') }
+];
+
+const xlsx = await objectsToXlsxBuffer(rows, { includeHeaders: true });
+const csv = objectsToCsv(rows); // includes a header row by default
+const tsv = objectsToTsv(rows); // for clipboard copy, not a download
+
 const fromRows = await rowsToXlsxBuffer([['Jonas', 30]]);
 ```
+
+Options:
+
+- `includeHeaders` / `headers` / `keys` — choose and label exported columns.
+- `sheetName`, `columnWidths`, `autoWidth` (default `true`), `boldHeaders` —
+  XLSX layout.
+- `bom` (CSV), `delimiter`, `eol`, `escapeFormulas` (default `true`).
+
+Dates become real Excel dates (not text), numbers stay numeric, and strings that
+begin with a formula character are prefixed with `'` in CSV/TSV so user data
+cannot execute in a spreadsheet. XLSX output is one sheet; cell strings are
+written as text, so a value like `=1+1` is not evaluated as a formula.
 
 ## `/typst`
 

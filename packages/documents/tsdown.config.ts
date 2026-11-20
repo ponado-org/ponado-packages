@@ -12,6 +12,6 @@ export default defineConfig({
 	format: 'esm',
 	dts: true,
 	deps: {
-		neverBundle: ['docx-merger', 'docxtemplater', 'pizzip', 'xlsx-write-stream']
+		neverBundle: ['docxtemplater', 'pizzip']
 	}
 });
