@@ -1,5 +1,24 @@
 # @ponado-org/documents
 
+## 0.6.0
+
+### Minor Changes
+
+- a532a69: Replace `docx-merger` with a same-template body concatenation in
+  `mergeDocxBuffers`. Documents rendered from one DOCX template are merged by
+  splicing their `<w:body>` content with a page break, keeping the first
+  document's styles, numbering, relationships, headers and footers. This is much
+  faster than a general OOXML merge and keeps the "merge once, convert once"
+  pipeline. Documents whose shared parts differ now throw instead of producing a
+  corrupt file. The `docx-merger` dependency is gone.
+- a532a69: Replace `xlsx-write-stream` with a dependency-free XLSX writer. The `/xlsx`
+  subpath now installs nothing and writes native numbers, booleans and dates
+  (with date formatting), bold headers, sheet names and column widths.
+
+    Add CSV and TSV serializers to the same subpath: `objectsToCsv`, `rowsToCsv`,
+    `objectsToTsv` and `rowsToTsv`. They include formula-injection protection and
+    an optional UTF-8 BOM for Excel.
+
 ## 0.5.0
 
 ### Minor Changes
