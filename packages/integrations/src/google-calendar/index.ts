@@ -64,12 +64,11 @@ export type CalendarClientOptions = {
 	serviceAccountJson?: string;
 	/** Path to the JSON key file (checked first). */
 	serviceAccountJsonPath?: string;
-	/** Existing calendar id. When omitted, `init()` creates a new calendar and uses it. */
+	/**
+	 * Existing calendar id used when a call omits `calendarId`. Optional —
+	 * apps that only use per-entity calendars don't need one.
+	 */
 	defaultCalendarId?: string;
-	/** Title for the calendar created by `init()` when no id is configured. */
-	calendarTitle?: string;
-	/** IANA time zone for a calendar created by `init()` (default `Europe/Vilnius`). */
-	timeZone?: string;
 	logger?: Logger;
 };
 
@@ -105,6 +104,11 @@ export class GoogleCalendarClient {
 		return this.#options?.defaultCalendarId;
 	}
 
+	/**
+	 * Builds the API client. Makes no requests — calendars are created
+	 * explicitly via `createCalendar()`, so booting an app never spawns
+	 * Google calendars as a side effect.
+	 */
 	async init() {
 		if (!this.#options)
 			throw new Error('CalendarClient not configured — call configure() first');
@@ -113,16 +117,6 @@ export class GoogleCalendarClient {
 		const auth = createServiceAccountAuth(this.#options);
 
 		this.#client = calendar({ auth, version: 'v3' });
-
-		// No calendar configured — create one and use it as the default for
-		// this process. Persist the returned id to reuse it across restarts.
-		if (!this.#options.defaultCalendarId) {
-			const calendarId = await this.createCalendar({
-				title: this.#options.calendarTitle,
-				timeZone: this.#options.timeZone
-			});
-			this.#options = { ...this.#options, defaultCalendarId: calendarId };
-		}
 	}
 
 	/** Creates a new calendar and returns its ID. */
@@ -144,13 +138,27 @@ export class GoogleCalendarClient {
 	}
 
 	/**
-	 * Cheap credential + access check: reads the calendar metadata. Resolves
-	 * only when the key is valid, the Calendar API is enabled and the calendar
-	 * exists and is accessible to the service account — suitable for boot-time
-	 * validation.
+	 * Boot-time credential check. With a calendar id (argument or configured
+	 * default): reads that calendar's metadata — validates the key, the
+	 * enabled Calendar API and access to the calendar. Without one: a
+	 * credential-only check via the service account's calendar list.
 	 */
-	async ping(calendarId?: string): Promise<{ calendarId: string; summary?: string }> {
-		const id = this.#resolveId(calendarId);
+	async ping(calendarId?: string): Promise<{ calendarId?: string; summary?: string }> {
+		const id = calendarId ?? this.#options?.defaultCalendarId;
+
+		if (!id) {
+			try {
+				await this.#c.calendarList.list();
+			} catch (err) {
+				this.#logger.error({ err }, 'Calendar credential check failed');
+				throw new Error(
+					`Google Calendar credential check failed: ${err instanceof Error ? err.message : String(err)}`
+				);
+			}
+			this.#logger.info('Calendar credentials OK');
+			return {};
+		}
+
 		try {
 			const res = await this.#c.calendars.get({ calendarId: id });
 			this.#logger.info({ calendarId: id }, 'Calendar ping OK');

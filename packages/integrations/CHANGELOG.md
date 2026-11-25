@@ -1,5 +1,17 @@
 # @ponado-org/integrations
 
+## 0.4.0
+
+### Minor Changes
+
+- Google Calendar client: `init()` no longer auto-creates a calendar when
+  `defaultCalendarId` is omitted — that side effect spawned a stray calendar on
+  every boot of apps without a shared calendar (and forced a placeholder env var
+  just to suppress it). Calendar creation is now explicit (`createCalendar()`),
+  `calendarTitle`/`timeZone` client options are gone (they exist on
+  `createCalendar`), and `ping()` without any calendar id falls back to a
+  credential-only check (calendar list).
+
 ## 0.3.6
 
 ### Patch Changes

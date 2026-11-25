@@ -167,21 +167,28 @@ import {
 
 const calendar = createGoogleCalendarClient({
 	serviceAccountJsonPath: process.env.GOOGLE_SERVICE_ACCOUNT_FILE,
-	defaultCalendarId: process.env.GOOGLE_CALENDAR_ID,
-	calendarTitle: 'My App Calendar',
-	timeZone: 'Europe/Vilnius',
 	logger: consoleLogger
 });
 
 await calendar.init();
+
+// Per-entity calendars are created explicitly:
+const id = await calendar.createCalendar({ title: 'Person calendar' });
+await calendar.invitePerson({ email: 'person@example.com', calendarId: id });
+
+// Boot check: no calendar configured -> validates the credentials only
+// (calendar list); pass a calendarId (or defaultCalendarId) to also verify
+// access to a specific calendar.
+await calendar.ping();
 ```
 
 Requires a service account with the Calendar API enabled and the calendar shared
-with the service account email. If `defaultCalendarId` is omitted, `init()`
-creates a calendar and `defaultCalendarId` exposes the new id — persist it.
+with the service account email. `init()` makes no requests and never creates
+calendars — creation is explicit (`createCalendar()`), so booting can't spawn
+stray calendars.
 
-`ping(calendarId?)` does a cheap `calendars.get` — use it at boot to validate
-the credentials, the Calendar API and calendar access in one call.
+`ping(calendarId?)` is the boot check: with a calendar it validates access to
+that calendar; without one it validates the credentials only (calendar list).
 
 ## `/stockx`
 
