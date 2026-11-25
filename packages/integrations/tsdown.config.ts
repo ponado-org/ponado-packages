@@ -18,7 +18,8 @@ export default defineConfig({
 			'@googleapis/calendar',
 			'file-type',
 			'google-auth-library',
-			'nodemailer'
+			'nodemailer',
+			'zod'
 		]
 	}
 });

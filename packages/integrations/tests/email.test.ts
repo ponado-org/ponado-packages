@@ -80,3 +80,64 @@ test('default replyTo is forwarded and per-send replyTo overrides it', async () 
 		expect.objectContaining({ replyTo: 'override@example.com' })
 	);
 });
+
+test('defaultHeaders are forwarded and per-send headers override them', async () => {
+	sendMail.mockResolvedValue({ envelope: {}, messageId: 'test' });
+
+	const client = createEmailClient({
+		accessKeyId: 'test',
+		secretAccessKey: 'test',
+		from: 'test@example.com',
+		defaultHeaders: { 'Content-Language': 'lt', 'X-App': 'default' },
+		logger
+	});
+
+	await client.sendEmail({
+		to: 'someone@example.com',
+		subject: 'Hello',
+		html: '<p>Hello</p>',
+		customHeaders: { 'X-App': 'override' }
+	});
+
+	expect(sendMail).toHaveBeenLastCalledWith(
+		expect.objectContaining({
+			headers: { 'Content-Language': 'lt', 'X-App': 'override' }
+		})
+	);
+});
+
+test('configuration set is forwarded per-send or from the client default', async () => {
+	sendMail.mockResolvedValue({ envelope: {}, messageId: 'test' });
+
+	const client = createEmailClient({
+		accessKeyId: 'test',
+		secretAccessKey: 'test',
+		from: 'test@example.com',
+		configurationSetName: 'default-set',
+		logger
+	});
+
+	await client.sendEmail({ to: 'someone@example.com', subject: 'Hello', html: '<p>Hello</p>' });
+	expect(sendMail).toHaveBeenLastCalledWith(
+		expect.objectContaining({ ses: { ConfigurationSetName: 'default-set' } })
+	);
+
+	await client.sendEmail({
+		to: 'someone@example.com',
+		subject: 'Hello',
+		html: '<p>Hello</p>',
+		configurationSetName: 'override-set'
+	});
+	expect(sendMail).toHaveBeenLastCalledWith(
+		expect.objectContaining({ ses: { ConfigurationSetName: 'override-set' } })
+	);
+
+	const noSet = createEmailClient({
+		accessKeyId: 'test',
+		secretAccessKey: 'test',
+		from: 'test@example.com',
+		logger
+	});
+	await noSet.sendEmail({ to: 'someone@example.com', subject: 'Hello', html: '<p>Hello</p>' });
+	expect(sendMail).toHaveBeenLastCalledWith(expect.objectContaining({ ses: undefined }));
+});
