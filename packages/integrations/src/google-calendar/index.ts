@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { JWT } from 'google-auth-library';
 import { calendar, calendar_v3 } from '@googleapis/calendar';
 
@@ -9,12 +10,28 @@ type ServiceAccountJson = {
 };
 
 /** Builds a service-account auth client from a JSON key. */
-function createServiceAccountAuth(serviceAccountJson: string): JWT {
+function createServiceAccountAuth(
+	options: Pick<CalendarClientOptions, 'serviceAccountJson' | 'serviceAccountJsonPath'>
+): JWT {
+	// Resolution order: inline JSON -> key file -> GOOGLE_APPLICATION_CREDENTIALS
+	// (Google's own convention), so an app can pass the credential either way.
+	const inline = options.serviceAccountJson;
+	const path =
+		options.serviceAccountJsonPath ??
+		(inline ? undefined : process.env.GOOGLE_APPLICATION_CREDENTIALS);
+	const source = inline ?? (path ? readFileSync(path, 'utf-8') : undefined);
+
+	if (!source) {
+		throw new Error(
+			'No service account key: set serviceAccountJson, serviceAccountJsonPath or GOOGLE_APPLICATION_CREDENTIALS'
+		);
+	}
+
 	let credentials: ServiceAccountJson;
 	try {
-		credentials = JSON.parse(serviceAccountJson) as ServiceAccountJson;
+		credentials = JSON.parse(source) as ServiceAccountJson;
 	} catch {
-		throw new Error('Invalid serviceAccountJson: expected a JSON service account key');
+		throw new Error('Invalid service account key: expected JSON');
 	}
 
 	if (!credentials.client_email || !credentials.private_key) {
@@ -43,7 +60,10 @@ export const consoleLogger: Logger = {
 };
 
 export type CalendarClientOptions = {
-	serviceAccountJson: string;
+	/** Inline JSON service-account key. Prefer the file variants. */
+	serviceAccountJson?: string;
+	/** Path to the JSON key file (checked first). */
+	serviceAccountJsonPath?: string;
 	/** Existing calendar id. When omitted, `init()` creates a new calendar and uses it. */
 	defaultCalendarId?: string;
 	/** Title for the calendar created by `init()` when no id is configured. */
@@ -90,7 +110,7 @@ export class GoogleCalendarClient {
 			throw new Error('CalendarClient not configured — call configure() first');
 		if (this.#client) return;
 
-		const auth = createServiceAccountAuth(this.#options.serviceAccountJson);
+		const auth = createServiceAccountAuth(this.#options);
 
 		this.#client = calendar({ auth, version: 'v3' });
 
@@ -121,6 +141,26 @@ export class GoogleCalendarClient {
 	async deleteCalendar(calendarId: string): Promise<void> {
 		await this.#c.calendars.delete({ calendarId });
 		this.#logger.info({ calendarId }, 'Deleted calendar');
+	}
+
+	/**
+	 * Cheap credential + access check: reads the calendar metadata. Resolves
+	 * only when the key is valid, the Calendar API is enabled and the calendar
+	 * exists and is accessible to the service account — suitable for boot-time
+	 * validation.
+	 */
+	async ping(calendarId?: string): Promise<{ calendarId: string; summary?: string }> {
+		const id = this.#resolveId(calendarId);
+		try {
+			const res = await this.#c.calendars.get({ calendarId: id });
+			this.#logger.info({ calendarId: id }, 'Calendar ping OK');
+			return { calendarId: id, summary: res.data.summary ?? undefined };
+		} catch (err) {
+			this.#logger.error({ calendarId: id, err }, 'Calendar ping failed');
+			throw new Error(
+				`calendar "${id}" is not accessible to this service account: ${err instanceof Error ? err.message : String(err)}`
+			);
+		}
 	}
 
 	// ── ACL ──────────────────────────────────────────────────────────────────

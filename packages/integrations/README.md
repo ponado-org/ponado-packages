@@ -9,7 +9,7 @@ and must be installed explicitly, so an app only downloads what it uses.
 | `/storage`         | –                                                                  |
 | `/stockx`          | –                                                                  |
 | `/s3`              | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `file-type` |
-| `/email`           | `@aws-sdk/client-sesv2`, `nodemailer`                              |
+| `/email`           | `@aws-sdk/client-sesv2`, `nodemailer`, `zod`                       |
 | `/google-calendar` | `@googleapis/calendar`, `google-auth-library`                      |
 
 ```bash
@@ -75,8 +75,9 @@ so this subpath itself carries no AWS SDK dependency.
 
 ## `/email`
 
-Amazon SES client on nodemailer's SES transport. Dry-run mode, injected logger,
-optional `onSent` hook. `sendEmail()` never throws.
+Amazon SES client on nodemailer's SES transport, plus delivery tracking for
+SES/SNS events. Dry-run mode, injected logger, optional `onSent` hook.
+`sendEmail()` never throws.
 
 ```ts
 import { createEmailClient } from '@ponado-org/integrations/email';
@@ -86,22 +87,73 @@ const email = createEmailClient({
 	secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
 	from: { address: 'noreply@example.com', name: 'My App' },
 	region: 'eu-north-1',
+	defaultHeaders: { 'Content-Language': 'lt' },
 	dryRun: false,
+	logger: console
+});
+
+await email.sendEmail({
+	to: 'someone@example.com',
+	subject: 'Hello',
+	html: '<p>Hello</p>'
+});
+```
+
+`defaultHeaders` is empty by default; pass `Content-Language` explicitly when
+you want Gmail language detection. `onSent` is awaited after every attempted
+send; its errors never change the result. Missing `to`/`subject`/`html` and
+dry-run mode return `success: false` without touching SES.
+
+### Delivery tracking
+
+`createEmailTracker()` records every send attempt through `onSent` and applies
+SES events delivered by an SNS webhook. It needs a `EmailTrackingStore` — the
+Ponado registry `email` block ships a Drizzle implementation; other projects
+can implement the interface over their own tables.
+
+```ts
+import {
+	createEmailClient,
+	createEmailTracker,
+	type EmailTrackingStore
+} from '@ponado-org/integrations/email';
+
+const tracker = createEmailTracker({
+	store,
 	logger: console,
-	onSent: async ({ props, result }) => recordAttempt({ meta: props.meta, result })
+	onStatusChange: (event) => eventBus.emit('email-status', event)
+});
+
+const email = createEmailClient({
+	accessKeyId: process.env.SES_ACCESS_KEY!,
+	secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
+	from: 'noreply@example.com',
+	logger: console,
+	onSent: tracker.recordAttempt
 });
 
 await email.sendEmail({
 	to: 'someone@example.com',
 	subject: 'Hello',
 	html: '<p>Hello</p>',
-	meta: { packetId: 42 } // opaque, returned to onSent
+	meta: {
+		entityType: 'invoice',
+		entityId: '42',
+		scopeType: 'batch',
+		scopeId: 'b1',
+		createdBy: 'user-1'
+	}
 });
 ```
 
-`onSent` is awaited after every attempted send; its errors never change the
-result. Missing `to`/`subject`/`html` and dry-run mode return `success: false`
-without touching SES.
+Point the SNS HTTPS subscription at a route that returns
+`tracker.handleSnsNotification(request)`. The handler verifies the SNS
+signature before touching the store, confirms subscriptions, ignores unknown
+message ids, and never downgrades a delivered/bounced/complained send.
+
+Statuses are readable strings (`pending`, `sent`, `delivered`, `bounced`,
+`complained`, `failed`). `normalizeSesMessageId()` is exported for matching
+SNS events to the id nodemailer returned.
 
 ## `/google-calendar`
 
@@ -114,7 +166,7 @@ import {
 } from '@ponado-org/integrations/google-calendar';
 
 const calendar = createGoogleCalendarClient({
-	serviceAccountJson: process.env.GOOGLE_SERVICE_ACCOUNT_JSON!,
+	serviceAccountJsonPath: process.env.GOOGLE_SERVICE_ACCOUNT_FILE,
 	defaultCalendarId: process.env.GOOGLE_CALENDAR_ID,
 	calendarTitle: 'My App Calendar',
 	timeZone: 'Europe/Vilnius',
@@ -127,6 +179,9 @@ await calendar.init();
 Requires a service account with the Calendar API enabled and the calendar shared
 with the service account email. If `defaultCalendarId` is omitted, `init()`
 creates a calendar and `defaultCalendarId` exposes the new id — persist it.
+
+`ping(calendarId?)` does a cheap `calendars.get` — use it at boot to validate
+the credentials, the Calendar API and calendar access in one call.
 
 ## `/stockx`
 
