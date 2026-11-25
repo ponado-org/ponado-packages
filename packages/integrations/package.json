@@ -1,7 +1,7 @@
 {
 	"name": "@ponado-org/integrations",
 	"type": "module",
-	"version": "0.3.4",
+	"version": "0.3.6",
 	"description": "Node integrations with zero installed weight: S3, storage, SES email, Google Calendar and StockX",
 	"author": "Adomas Poniškaitis <adomas@ponado.lt>",
 	"license": "MIT",

@@ -1,5 +1,22 @@
 # @ponado-org/integrations
 
+## 0.3.6
+
+### Patch Changes
+
+- Remove `EmailClient.ping()`: the GetAccount-based check demanded an extra IAM
+  action just for health monitoring. Boot validation should not drive IAM policy
+  changes — apps that want a check should use read-only calls their credentials
+  already allow or config validation.
+
+## 0.3.5
+
+### Patch Changes
+
+- `EmailClient.ping()`: boot-time SES check — reads the account sending status
+  (GetAccount) with the configured credentials/region and throws when the
+  credentials are rejected or sending is disabled for the account.
+
 ## 0.3.4
 
 ### Patch Changes
