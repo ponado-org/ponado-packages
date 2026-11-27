@@ -104,6 +104,47 @@ you want Gmail language detection. `onSent` is awaited after every attempted
 send; its errors never change the result. Missing `to`/`subject`/`html` and
 dry-run mode return `success: false` without touching SES.
 
+### Delivery safety policy
+
+`withEmailDeliveryPolicy()` wraps a client with a central outbound switch. The
+app resolves its own environment/config and passes the mode and addresses in;
+the package never reads env vars.
+
+| Mode        | Behavior                                                                              |
+| ----------- | ------------------------------------------------------------------------------------- |
+| `live`      | Send to the real recipients.                                                          |
+| `allowlist` | Send only when **every** recipient is in `recipients`; otherwise skip the whole send. |
+| `redirect`  | Replace every recipient with `recipients`, prefix the subject with `[TEST] `.         |
+| `off`       | Never call the provider.                                                              |
+
+```ts
+import { createEmailClient, withEmailDeliveryPolicy } from '@ponado-org/integrations/email';
+
+const email = withEmailDeliveryPolicy(
+	createEmailClient({
+		accessKeyId: process.env.SES_ACCESS_KEY!,
+		secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
+		from: 'noreply@example.com',
+		logger: console
+	}),
+	{
+		mode: 'redirect',
+		recipients: ['you@example.com'],
+		logger: console,
+		// Optional: keep the intended recipients in your tracking meta.
+		onRedirect: (props, originalRecipients) => ({
+			...props,
+			meta: { ...props.meta, originalTo: originalRecipients }
+		})
+	}
+);
+```
+
+Skipped sends (`off`, non-allowlisted recipients, a test-list mode without
+addresses) never reach the provider and never fire `onSent`. Recipient matching
+is case-insensitive. Set `subjectPrefix: false` to keep the original subject in
+redirect mode.
+
 ### Delivery tracking
 
 `createEmailTracker()` records every send attempt through `onSent` and applies
