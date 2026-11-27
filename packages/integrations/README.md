@@ -110,12 +110,16 @@ dry-run mode return `success: false` without touching SES.
 app resolves its own environment/config and passes the mode and addresses in;
 the package never reads env vars.
 
-| Mode        | Behavior                                                                              |
-| ----------- | ------------------------------------------------------------------------------------- |
-| `live`      | Send to the real recipients.                                                          |
-| `allowlist` | Send only when **every** recipient is in `recipients`; otherwise skip the whole send. |
-| `redirect`  | Replace every recipient with `recipients`, prefix the subject with `[TEST] `.         |
-| `off`       | Never call the provider.                                                              |
+| Mode        | Behavior                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| `direct`    | Send to the real recipients.                                                              |
+| `allowlist` | Send only when **every** recipient is in `testRecipients`; otherwise skip the whole send. |
+| `redirect`  | Replace every recipient with `testRecipients`, prefix the subject with `[TEST] `.         |
+| `off`       | Never call the provider.                                                                  |
+
+The policy is a discriminated union: `testRecipients` exists only in
+`allowlist` and `redirect` mode, so a direct/off config cannot carry unused
+addresses.
 
 ```ts
 import { createEmailClient, withEmailDeliveryPolicy } from '@ponado-org/integrations/email';
@@ -129,7 +133,7 @@ const email = withEmailDeliveryPolicy(
 	}),
 	{
 		mode: 'redirect',
-		recipients: ['you@example.com'],
+		testRecipients: ['you@example.com'],
 		logger: console,
 		// Optional: keep the intended recipients in your tracking meta.
 		onRedirect: (props, originalRecipients) => ({

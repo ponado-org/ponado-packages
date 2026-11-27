@@ -57,7 +57,7 @@ async function send(
 
 describe('withEmailDeliveryPolicy', () => {
 	it('never calls the provider in off mode', async () => {
-		const { result, calls, warn } = await send({ mode: 'off', recipients: [] });
+		const { result, calls, warn } = await send({ mode: 'off' });
 
 		expect(calls).toHaveLength(0);
 		expect(result.success).toBe(false);
@@ -67,7 +67,7 @@ describe('withEmailDeliveryPolicy', () => {
 
 	it('sends allowlisted recipients through unchanged', async () => {
 		const { result, calls } = await send(
-			{ mode: 'allowlist', recipients: ['me@example.test'] },
+			{ mode: 'allowlist', testRecipients: ['me@example.test'] },
 			baseProps({ to: { address: 'ME@Example.test', name: 'Me' } })
 		);
 
@@ -78,7 +78,7 @@ describe('withEmailDeliveryPolicy', () => {
 
 	it('skips the whole send when any recipient is not allowlisted', async () => {
 		const { result, calls, warn } = await send(
-			{ mode: 'allowlist', recipients: ['me@example.test'] },
+			{ mode: 'allowlist', testRecipients: ['me@example.test'] },
 			baseProps({ to: ['me@example.test', 'person@example.test'] })
 		);
 
@@ -89,7 +89,7 @@ describe('withEmailDeliveryPolicy', () => {
 	});
 
 	it('skips an allowlist send without recipients', async () => {
-		const { result, calls } = await send({ mode: 'allowlist', recipients: [] });
+		const { result, calls } = await send({ mode: 'allowlist', testRecipients: [] });
 
 		expect(calls).toHaveLength(0);
 		expect(result.success).toBe(false);
@@ -101,7 +101,7 @@ describe('withEmailDeliveryPolicy', () => {
 		const { result, calls } = await send(
 			{
 				mode: 'redirect',
-				recipients: ['me@example.test'],
+				testRecipients: ['me@example.test'],
 				onRedirect: (props, originalRecipients) => {
 					seen.push({ original: originalRecipients, to: props.to as string[] });
 					return {
@@ -133,29 +133,29 @@ describe('withEmailDeliveryPolicy', () => {
 
 	it('does not double-prefix the subject and supports disabling the prefix', async () => {
 		const prefixed = await send(
-			{ mode: 'redirect', recipients: ['me@example.test'] },
+			{ mode: 'redirect', testRecipients: ['me@example.test'] },
 			baseProps({ subject: '[TEST] Sveikinimas' })
 		);
 		expect(prefixed.calls[0].subject).toBe('[TEST] Sveikinimas');
 
 		const bare = await send(
-			{ mode: 'redirect', recipients: ['me@example.test'], subjectPrefix: false },
+			{ mode: 'redirect', testRecipients: ['me@example.test'], subjectPrefix: false },
 			baseProps()
 		);
 		expect(bare.calls[0].subject).toBe('Sveikinimas');
 	});
 
 	it('skips a redirect without recipients', async () => {
-		const { result, calls } = await send({ mode: 'redirect', recipients: [] });
+		const { result, calls } = await send({ mode: 'redirect', testRecipients: [] });
 
 		expect(calls).toHaveLength(0);
 		expect(result.success).toBe(false);
 		expect(result.errorMessage).toBe('Email redirect has no recipients');
 	});
 
-	it('passes live sends straight through', async () => {
+	it('passes direct sends straight through', async () => {
 		const props = baseProps({ to: 'person@example.test' });
-		const { result, calls } = await send({ mode: 'live', recipients: [] }, props);
+		const { result, calls } = await send({ mode: 'direct' }, props);
 
 		expect(result.success).toBe(true);
 		expect(calls[0]).toEqual(props);

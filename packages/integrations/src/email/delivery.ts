@@ -3,23 +3,31 @@ import type { EmailAddress, EmailLogger, SendEmailProps, SendEmailResult } from 
 /**
  * Outbound delivery policy.
  *
- * `live`      — send to the real recipients.
- * `allowlist` — send only when every recipient is listed in `recipients`.
- * `redirect`  — send every email to `recipients` instead.
+ * `direct`    — send to the real recipients.
+ * `allowlist` — send only when every recipient is in `testRecipients`.
+ * `redirect`  — send every email to `testRecipients` instead.
  * `off`       — never call the provider.
  *
  * The policy is injected by the app; this module never reads environment
  * variables or deployment modes.
  */
-export const EMAIL_DELIVERY_MODES = ['live', 'allowlist', 'redirect', 'off'] as const;
+export const EMAIL_DELIVERY_MODES = ['direct', 'allowlist', 'redirect', 'off'] as const;
 
 export type EmailDeliveryMode = (typeof EMAIL_DELIVERY_MODES)[number];
 
-export type EmailDeliveryPolicy = {
-	mode: EmailDeliveryMode;
-	/** Addresses used by `allowlist` (allowed) and `redirect` (destination). */
-	recipients: readonly string[];
-};
+export type EmailDeliveryPolicy =
+	| { mode: 'direct' }
+	| { mode: 'off' }
+	| {
+			mode: 'allowlist';
+			/** Addresses allowed to receive the real message. */
+			testRecipients: readonly string[];
+	  }
+	| {
+			mode: 'redirect';
+			/** Addresses that replace the real recipients. */
+			testRecipients: readonly string[];
+	  };
 
 /** The part of an email client the policy needs. `EmailClient` satisfies it. */
 export type EmailSender<TMeta = undefined> = {
@@ -76,7 +84,6 @@ export function withEmailDeliveryPolicy<TMeta = undefined>(
 	options: EmailDeliveryOptions<TMeta>
 ): EmailSender<TMeta> {
 	const logger = options.logger ?? console;
-	const recipients = normalizeRecipients(options.recipients);
 	const subjectPrefix =
 		options.subjectPrefix === undefined ? DEFAULT_SUBJECT_PREFIX : options.subjectPrefix;
 
@@ -84,66 +91,74 @@ export function withEmailDeliveryPolicy<TMeta = undefined>(
 		sendEmail: async (props) => {
 			const originalTo = recipientAddresses(props.to);
 
-			if (options.mode === 'off') {
-				logger.warn(
-					{ to: originalTo, subject: props.subject },
-					'Email delivery is off; send skipped'
-				);
-				return skipped('Email delivery is off');
-			}
-
-			if (options.mode === 'allowlist') {
-				if (recipients.length === 0) {
+			switch (options.mode) {
+				case 'off':
 					logger.warn(
-						{ subject: props.subject },
-						'Email allowlist has no recipients; send skipped'
+						{ to: originalTo, subject: props.subject },
+						'Email delivery is off; send skipped'
 					);
-					return skipped('Email allowlist has no recipients');
+					return skipped('Email delivery is off');
+
+				case 'allowlist': {
+					const recipients = normalizeRecipients(options.testRecipients);
+
+					if (recipients.length === 0) {
+						logger.warn(
+							{ subject: props.subject },
+							'Email allowlist has no recipients; send skipped'
+						);
+						return skipped('Email allowlist has no recipients');
+					}
+
+					const allowed = new Set(recipients);
+					const blocked = originalTo.filter((address) => !allowed.has(address));
+
+					if (blocked.length > 0) {
+						logger.warn(
+							{ blocked, subject: props.subject },
+							'Email recipients are not allowlisted; send skipped'
+						);
+						return skipped('Recipients are not allowlisted');
+					}
+
+					return client.sendEmail(props);
 				}
 
-				const allowed = new Set(recipients);
-				const blocked = originalTo.filter((address) => !allowed.has(address));
+				case 'redirect': {
+					const recipients = normalizeRecipients(options.testRecipients);
 
-				if (blocked.length > 0) {
-					logger.warn(
-						{ blocked, subject: props.subject },
-						'Email recipients are not allowlisted; send skipped'
+					if (recipients.length === 0) {
+						logger.warn(
+							{ subject: props.subject },
+							'Email redirect has no recipients; send skipped'
+						);
+						return skipped('Email redirect has no recipients');
+					}
+
+					logger.info(
+						{ originalTo, redirectedTo: recipients, subject: props.subject },
+						'Email redirected to test recipients'
 					);
-					return skipped('Recipients are not allowlisted');
-				}
-			}
 
-			if (options.mode === 'redirect') {
-				if (recipients.length === 0) {
-					logger.warn(
-						{ subject: props.subject },
-						'Email redirect has no recipients; send skipped'
+					const subject =
+						subjectPrefix === false || props.subject.startsWith(subjectPrefix)
+							? props.subject
+							: `${subjectPrefix}${props.subject}`;
+
+					const redirected: SendEmailProps<TMeta> = {
+						...props,
+						to: recipients,
+						subject
+					};
+
+					return client.sendEmail(
+						options.onRedirect ? options.onRedirect(redirected, originalTo) : redirected
 					);
-					return skipped('Email redirect has no recipients');
 				}
 
-				logger.info(
-					{ originalTo, redirectedTo: recipients, subject: props.subject },
-					'Email redirected to test recipients'
-				);
-
-				const subject =
-					subjectPrefix === false || props.subject.startsWith(subjectPrefix)
-						? props.subject
-						: `${subjectPrefix}${props.subject}`;
-
-				const redirected: SendEmailProps<TMeta> = {
-					...props,
-					to: recipients,
-					subject
-				};
-
-				return client.sendEmail(
-					options.onRedirect ? options.onRedirect(redirected, originalTo) : redirected
-				);
+				case 'direct':
+					return client.sendEmail(props);
 			}
-
-			return client.sendEmail(props);
 		}
 	};
 }
